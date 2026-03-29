@@ -5,7 +5,6 @@
 
 module FancyToposStuff where
 
-import Data.Set
 
 class Monad m where
     return :: a -> m a
@@ -52,6 +51,7 @@ data FiniteSetsArrow a b = FiniteSetsArrow {
 
 
 
+main :: IO ()
 main = do
     putStrLn "Hello World main "
 --    let set = Set [1,2,3]

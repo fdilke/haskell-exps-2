@@ -9,6 +9,7 @@ import qualified Test.RecordTypesSpec as RecordTypes
 import qualified Test.AutomataSpec as Automata
 import qualified Test.OlogsSpec as Ologs
 import qualified Test.GraphSpec as Graph
+import qualified Test.GroupSpec as Group
 
 main :: IO ()
 main = hspec $ do
@@ -20,5 +21,6 @@ main = hspec $ do
     describe "Automata" Automata.spec
     describe "Ologs" Ologs.spec
     describe "Graph" Graph.spec
---    describe "My amazing tests" [ FastLaneSpec FooSpec ]
+    describe "Group" Group.spec
+
 

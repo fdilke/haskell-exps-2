@@ -82,7 +82,7 @@ test-suite haskell-exps-test
   main-is:          Main.hs
 
   -- Test dependencies.
-  build-depends:    base, containers, megaparsec, hspec, langfeatures, text
+  build-depends:    base, hspec, langfeatures
   other-modules:    Test.FastLaneSpec,
                     Test.FooSpec,
                     Test.KickTyresSpec,
@@ -90,11 +90,12 @@ test-suite haskell-exps-test
                     Test.AutomataSpec,
                     Test.OlogsSpec,
                     Test.RecordTypesSpec,
-                    Test.GraphSpec
+                    Test.GraphSpec,
+                    Test.GroupSpec
 
 library langfeatures
   import: warnings, commonSettings
-  build-depends:   base, containers, megaparsec, parser-combinators, text
+  build-depends:   base, containers
   hs-source-dirs:  src
   exposed-modules: FastLane,
                    KickTyres,
@@ -102,6 +103,7 @@ library langfeatures
                    Automata,
                    Ologs,
                    RecordTypes,
+                   FancyToposStuff,
                    Graph
 
 executable haskell-exps
