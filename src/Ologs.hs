@@ -25,14 +25,10 @@ module Ologs
 where
 
 import Control.Monad
-import Data.Foldable (for_)
 import Data.List.NonEmpty (NonEmpty, nonEmpty)
 import qualified Data.List.NonEmpty as NE
-import Data.Map (Map)
 import qualified Data.Map as Map
-import Data.Maybe
 import Data.Traversable
-import Debug.Trace
 
 data Arc dot = Arc
   { name :: String,
@@ -54,6 +50,7 @@ data Olog dot = Olog
   }
   deriving (Show, Eq)
 
+{-
 makeOlogOld ::
   forall dot.
   (Eq dot, Show dot) =>
@@ -111,8 +108,8 @@ makeOlogOld dots preArcs preIdentities =
     checkTerm errorFactory arcNames = errorUnless (targets == sources) $ errorFactory arcNames
       where
         arcs :: [(dot, dot)] = catMaybes $ flip Map.lookup namesToArcs <$> arcNames
-        targets :: [dot] = tail $ snd <$> arcs
-        sources :: [dot] = init $ fst <$> arcs
+        targets :: [dot] = NE.tail $ snd <$> NE.fromList arcs
+        sources :: [dot] = NE.init $ fst <$> NE.fromList arcs
     identityMismatchErrors = catMaybes $ checkMismatch <$> preIdentities
     checkMismatch :: ([String], [String]) -> Maybe (MakeOlogError dot)
     checkMismatch (lhs, rhs) = do
@@ -154,7 +151,7 @@ makeOlogOld dots preArcs preIdentities =
               case Map.lookup (NE.head terms) namesToArcs of
                 Nothing -> Nothing
                 Just (_, tgt) -> Just (src, tgt)
-
+-}
 -- type f $ x = f x
 -- type ($) f x = f x
 

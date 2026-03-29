@@ -22,5 +22,5 @@ allPrimes = filter isPrime [1..]
 
 isPrime :: Int -> Bool
 isPrime n = (n > 1 &&) $
-    null $ filter isFactor [2..pred n]
-        where isFactor = (0 ==) . (mod n)
+    not $ any isFactor [2..pred n]
+        where isFactor = (0 ==) . mod n

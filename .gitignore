@@ -23,4 +23,5 @@ cabal.project.local~
 .HTF/
 .ghc.environment.*
 .direnv
-
+*.iml
+.idea/

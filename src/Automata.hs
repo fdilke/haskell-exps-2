@@ -12,8 +12,6 @@
 -- module LangFeature.Automata ( doNothing) where
 module Automata where
 
-import GHC.StaticPtr (staticPtrKeys)
-
 doNothing :: Int -> Int
 doNothing x = x
 

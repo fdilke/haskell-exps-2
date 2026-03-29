@@ -1,6 +1,7 @@
-{-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies, TypeFamilies #-}
+{-# LANGUAGE MultiParamTypeClasses, TypeFamilies #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE GADTs #-}
+-- FunctionalDependencies
 
 module FancyToposStuff where
 
@@ -52,7 +53,7 @@ data FiniteSetsArrow a b = FiniteSetsArrow {
 
 
 main = do
-    putStrLn("Hello World main ")
+    putStrLn "Hello World main "
 --    let set = Set [1,2,3]
 --    putStrLn(show $ insert 5 set)
 --    val dot = new Dot("*")

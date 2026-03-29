@@ -5,4 +5,4 @@ data Person = Person { name :: String
                      } deriving (Show)
 
 hasBigFeet :: Person -> Bool
-hasBigFeet person = shoeSize person > 10
+hasBigFeet person = (.shoeSize) person > 10

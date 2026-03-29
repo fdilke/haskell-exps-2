@@ -11,7 +11,7 @@ cabal-version:      3.0
 --   http://haskell.org/cabal/users-guide/
 --
 -- The name of the package.
-name:               haskell-exps-two
+name:               haskell-exps
 
 -- The package version.
 -- See the Haskell package versioning policy (PVP) for standards
@@ -53,9 +53,17 @@ extra-doc-files:    CHANGELOG.md
 
 common commonSettings
   -- Base language which the package is written in.
-  default-language: Haskell2010
+  default-language:   GHC2024
   default-extensions:
-    OverloadedStrings 
+    OverloadedStrings
+    OverloadedRecordDot
+    NoFieldSelectors
+    ScopedTypeVariables
+    InstanceSigs
+    ImportQualifiedPost
+    BlockArguments
+    TypeFamilies
+  ghc-options: -threaded -Wunused-packages
 
 common warnings
     ghc-options: -Wall
@@ -96,7 +104,7 @@ library langfeatures
                    RecordTypes,
                    Graph
 
-executable haskell-experiments
+executable haskell-exps
   import: warnings, commonSettings
   build-depends:    base, containers
   main-is:          Main.hs
