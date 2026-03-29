@@ -1,6 +1,3 @@
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE OverloadedRecordDot #-}
-{-# LANGUAGE NoFieldSelectors #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 {-# HLINT ignore "Use const" #-}
@@ -33,7 +30,7 @@ spec = do
             listStates2 automaton2 [4, 7, 12] `shouldBe` [0, 4, 11, 23]
   describe "automaton3 can process a list of inputs and output the resulting states" $ do
     let automaton3 :: Automaton3 Parity ()
-        automaton3 = Automaton3 {initial = Even, update = \n s -> flipP s , acceptable = (== Odd)}
+        automaton3 = Automaton3 {initial = Even, update = \_ s -> flipP s , acceptable = (== Odd)}
      in do
           prop "Automaton3 tests" $ \inputs -> 
             acceptInputs3 automaton3 inputs == (length inputs `mod` 2 == 1)

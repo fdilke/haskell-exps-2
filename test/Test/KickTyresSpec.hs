@@ -31,7 +31,7 @@ spec = do
         it "can cons up a list, strings being lists of characters" $
             'A' : " test" `shouldBe` "A test"
         it "can pick out elements from a list" $
-            ["one", "two", "three"] !! 1 `shouldBe` "two"
+            ["one", "two", "three"] !! 1 `shouldBe` ("two" :: [Char])
         it "can concatenate lists" $
             [1 :: Int,2] ++ [3 :: Int,4] `shouldBe` [1 :: Int,2,3,4]
         it "can lexicographically compare lists" $

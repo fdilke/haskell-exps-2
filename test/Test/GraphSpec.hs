@@ -1,5 +1,3 @@
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE OverloadedRecordDot #-}
 {-# HLINT ignore "Use const" #-}
 {-# HLINT ignore "Unused LANGUAGE pragma" #-}
 {-# HLINT ignore "Avoid lambda" #-}
@@ -7,6 +5,7 @@
 {-# LANGUAGE NoFieldSelectors #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# LANGUAGE TypeApplications #-}
+{-# OPTIONS_GHC -Wno-unused-imports #-}
 
 module Test.GraphSpec where
 
@@ -18,5 +17,5 @@ spec :: Spec
 spec = do
   describe "Graph handling" $ do
     it "a..." $ do
-      1 `shouldBe` 1
+      True `shouldBe` True
 
