@@ -91,7 +91,8 @@ test-suite haskell-exps-test
                     Test.OlogsSpec,
                     Test.RecordTypesSpec,
                     Test.GraphSpec,
-                    Test.GroupSpec
+                    Test.GroupSpec,
+                    Test.Algorithms.BacktrackSpec
 
 library langfeatures
   import: warnings, commonSettings
@@ -104,7 +105,8 @@ library langfeatures
                    Ologs,
                    RecordTypes,
                    FancyToposStuff,
-                   Graph
+                   Graph,
+                   Algorithms.Backtrack
 
 executable haskell-exps
   import: warnings, commonSettings

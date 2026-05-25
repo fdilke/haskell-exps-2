@@ -10,6 +10,7 @@ import qualified Test.AutomataSpec as Automata
 import qualified Test.OlogsSpec as Ologs
 import qualified Test.GraphSpec as Graph
 import qualified Test.GroupSpec as Group
+import qualified Test.Algorithms.BacktrackSpec as Backtrack
 
 main :: IO ()
 main = hspec $ do
@@ -22,5 +23,6 @@ main = hspec $ do
     describe "Ologs" Ologs.spec
     describe "Graph" Graph.spec
     describe "Group" Group.spec
+    describe "Backtrack" Backtrack.spec
 
 
