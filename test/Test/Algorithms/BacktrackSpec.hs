@@ -11,6 +11,7 @@ import Test.Hspec
 import Control.Monad.IO.Class (MonadIO(liftIO))
 import GHC.IORef (newIORef, IORef, readIORef)
 import Data.List (sort)
+import Data.IORef (modifyIORef)
 
 spec :: Spec
 spec = do
@@ -31,24 +32,35 @@ spec = do
               else [Left (i + 1)])
         `shouldBe` [True]
 
-    it "finds a solution in a branching search" $
+    it "finds a solution in a branching search" $ do
       let seqValues :: [Bool]
           seqValues = [True, False]
-          -- state is [Bool], result is [Bool]
-          solutions = solve @[Bool] @[Bool] [] (\prefix ->
-            if length prefix == 3
-              then [Right prefix]
-              else concatMap (\v -> [Left (prefix ++ [v])]) seqValues)
-       in sort solutions
-            `shouldBe` sort [ [False, False, False]
-                       , [False, False, True]
-                       , [False, True, False]
-                       , [False, True, True]
-                       , [True, False, False]
-                       , [True, False, True]
-                       , [True, True, False]
-                       , [True, True, True]
-                       ]
+      (args, solutions) <- wrapSolve @[Bool] @[Bool] [] (\prefix ->
+          if length prefix == 3
+            then [Right prefix]
+            else concatMap (\v -> [Left (prefix ++ [v])]) seqValues)
+      liftIO $ do
+        sort solutions `shouldBe` sort
+          [ [False, False, False]
+          , [False, False, True]
+          , [False, True, False]
+          , [False, True, True]
+          , [True, False, False]
+          , [True, False, True]
+          , [True, True, False]
+          , [True, True, True]
+          ]
+        -- args `shouldBe` [ [False, False, False]
+        --   , [False, False, True]
+        --   , [False, True, False]
+        --   , [False, True, True]
+        --   , [True, False, False]
+        --   , [True, False, True]
+        --   , [True, True, False]
+        --   , [True, True, True]
+        --   ]
+
+
   -- test("find a solution in a branching search"):
   --   val seqValues: Iterable[Boolean] =
   --     Iterable(true, false)
@@ -75,10 +87,13 @@ spec = do
   --   )
   --   explorations.get().size is 15
 
---  test("successfully increments a value to 5"):
---     solver[Int, Boolean](0): i =>
---       if (i == 5)
---         Iterable(Right(true))
---       else
---         Iterable(Left(i + 1))
---     .headOption is Some(true)
+wrapSolve :: forall a b. a -> (a -> [Either a b]) -> IO ([a], [b])
+wrapSolve start next = do
+  ref :: IORef [a] <- newIORef []
+  bs <- solveM start \x -> do
+      _ <- modifyIORef ref (x :)
+      pure (next x)
+  args <- readIORef ref
+  pure (args, bs)
+
+  
