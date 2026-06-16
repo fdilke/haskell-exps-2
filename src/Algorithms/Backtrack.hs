@@ -1,25 +1,16 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
-module Algorithms.Backtrack (solve, transformEithers, solveM)
+module Algorithms.Backtrack (solve, solveM, transformEithers)
 where
 
 import Data.Foldable (foldrM)
-
-transformEithers :: forall a b. [Either a b] -> ([a], [b])
-transformEithers = foldr combineEither ([], [])
- where
-  combineEither :: Either a b -> ([a], [b]) -> ([a], [b])
-  combineEither (Left a) (as, bs) = (a : as, bs)
-  combineEither (Right b) (as, bs) = (as, b : bs)
+import Data.Functor.Identity (Identity(..))
 
 solve :: forall a b. a -> (a -> [Either a b]) -> [b]
-solve start next = doIt [start]
- where
-  doIt :: [a] -> [b]
-  doIt [] = []
-  doIt (x : as0) = bs <> doIt (as0 <> as)
-   where
-    (as, bs) = transformEithers (next x)
+solve start next = runIdentity $ solveM start (pure . next)
+
+transformEithers :: [Either a b] -> ([a], [b])
+transformEithers = runIdentity . transformEithersM
 
 transformEithersM :: forall a b m. (Monad m) => [Either a b] -> m ([a], [b])
 transformEithersM = foldrM combineEitherM ([], [])

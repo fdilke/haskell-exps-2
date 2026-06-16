@@ -7,7 +7,7 @@
 module Test.Algorithms.BacktrackSpec where
 
 import Algorithms.Backtrack
-import Control.Monad.IO.Class (MonadIO (liftIO))
+import Control.Monad.State
 import Data.IORef (modifyIORef)
 import Data.List (sort)
 import GHC.IORef (IORef, newIORef, readIORef)
@@ -82,3 +82,15 @@ wrapSolve start next = do
     pure (next x)
   args <- readIORef ref
   pure (args, bs)
+
+wrapSolve' :: a -> (a -> [Either a b]) -> ([b], [a])
+wrapSolve' start next = runState (wrapSolveState start next) []
+
+wrapSolveState :: a -> (a -> [Either a b]) -> State [a] [b]
+wrapSolveState start next = do
+  solveM
+    start
+    ( \x -> do
+        modify (x :)
+        pure (next x)
+    )
