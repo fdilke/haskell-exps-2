@@ -106,6 +106,7 @@ library langfeatures
                    RecordTypes,
                    FancyToposStuff,
                    Graph,
+                   Group,   
                    Algorithms.Backtrack
 
 executable haskell-exps
