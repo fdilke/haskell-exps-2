@@ -6,8 +6,7 @@
 {-# LANGUAGE KindSignatures #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
-module Group
-where
+module Group(cyclicGroup, Group(..), orderElement, isAbelian) where
 
 import Data.Proxy (Proxy (..))
 import GHC.TypeNats (KnownNat, Nat, SomeNat (..), natVal, someNatVal)
@@ -15,6 +14,7 @@ import Data.Set (Set)
 import Data.Set qualified as Set
 
 class (Eq g, Show g) => Group g p | g -> p where
+  elements :: [g]
   groupFrom :: p -> g
   groupTo :: g -> p
   identity :: g
@@ -25,6 +25,7 @@ class (Eq g, Show g) => Group g p | g -> p where
 newtype CyclicGroup (n :: Nat) = CyclicGroup Int deriving (Show, Eq)
 
 instance KnownNat n => Group (CyclicGroup n) Int where
+  elements = CyclicGroup <$> [0 .. fromIntegral (natVal (Proxy @n)) - 1]
   groupFrom = CyclicGroup
   groupTo (CyclicGroup x) = x
   identity = CyclicGroup 0
@@ -53,3 +54,10 @@ orderElement x = test 1 x where
     | y == identity = n
     | otherwise = test (n + 1) (combine x y)
 
+isAbelian :: forall g p. Group g p => Proxy (g, p) -> Bool
+isAbelian _ = all (\(x, y) -> combine x y == combine y x) pairs
+  where
+    pairs :: [(g, g)]
+    pairs = [(x, y) | x <- elements, y <- elements]
+
+    
