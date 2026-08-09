@@ -26,6 +26,8 @@ class (Eq g, Ord g,Show g) => Group g p | g -> p where
   identity :: g
   inverse :: g -> g
   combine :: g -> g -> g
+  elementsList :: [g]
+  elementsList = Set.toList elements
 
 -- | The cyclic group Z/nZ, with the modulus @n@ carried at the type level.
 newtype CyclicGroup (n :: Nat) = CyclicGroup Int deriving (Show, Eq, Ord)
@@ -73,8 +75,7 @@ isAbelian :: forall g p. Group g p =>  Bool
 isAbelian = all (uncurry commutes) pairs
   where
     pairs :: [(g, g)]
-    pairs = [(x, y) | x <- groupElements, y <- groupElements]
-    groupElements = Set.toList elements
+    pairs = [(x, y) | x <- elementsList, y <- elementsList]
     
 $(singletons [d|
   data Foo = Foo { fooName :: String, fooCount :: Nat }
