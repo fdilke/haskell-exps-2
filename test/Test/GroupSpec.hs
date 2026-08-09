@@ -22,7 +22,7 @@ spec = do
         orderElement (groupFrom @g 3) `shouldBe` 2
         orderElement (groupFrom @g 4) `shouldBe` 3
         orderElement (groupFrom @g 5) `shouldBe` 6
-        isAbelian (Proxy @g) `shouldBe` True
+        isAbelian @g `shouldBe` True
       )
       
   describe "cyclicGroup" $

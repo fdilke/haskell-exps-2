@@ -4,6 +4,7 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 module Group(cyclicGroup, Group(..), orderElement, isAbelian) where
@@ -54,10 +55,15 @@ orderElement x = test 1 x where
     | y == identity = n
     | otherwise = test (n + 1) (combine x y)
 
-isAbelian :: forall g p. Group g p => Proxy g -> Bool
-isAbelian _ = all (\(x, y) -> combine x y == combine y x) pairs
+-- isAbelian :: forall g p. Group g p => Proxy g -> Bool
+-- isAbelian _ = all (\(x, y) -> combine x y == combine y x) pairs
+--   where
+--     pairs :: [(g, g)]
+--     pairs = [(x, y) | x <- elements, y <- elements]
+
+isAbelian :: forall g p. Group g p =>  Bool
+isAbelian = all (\(x, y) -> combine x y == combine y x) pairs
   where
     pairs :: [(g, g)]
     pairs = [(x, y) | x <- elements, y <- elements]
-
     
