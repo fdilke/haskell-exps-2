@@ -11,13 +11,14 @@
 
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
-module Group(cyclicGroup, Group(..), orderElement, isAbelian) where
+module Group(Group(..), cyclicGroup, orderElement, isAbelian) where
 
 import Data.Proxy (Proxy (..))
 import GHC.TypeNats (KnownNat, Nat, SomeNat (..), natVal, someNatVal)
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Singletons.Base.TH
+import Data.Bits (xor)
 
 class (Eq g, Ord g,Show g) => Group g p | g -> p where
   elements :: Set g
@@ -30,26 +31,26 @@ class (Eq g, Ord g,Show g) => Group g p | g -> p where
   elementsList = Set.toList elements
 
 -- | The cyclic group Z/nZ, with the modulus @n@ carried at the type level.
-newtype CyclicGroup (n :: Nat) = CyclicGroup Int deriving (Show, Eq, Ord)
+newtype Power (n :: Nat) = Power Int deriving (Show, Eq, Ord)
 
-instance KnownNat n => Group (CyclicGroup n) Int where
-  elements = Set.fromList $ CyclicGroup <$> [0 .. fromIntegral (natVal (Proxy @n)) - 1]
-  groupFrom = CyclicGroup
-  groupTo (CyclicGroup x) = x
-  identity = CyclicGroup 0
-  inverse (CyclicGroup x) = CyclicGroup ((m - x) `mod` m)
+instance KnownNat n => Group (Power n) Int where
+  elements = Set.fromList $ Power <$> [0 .. fromIntegral (natVal (Proxy @n)) - 1]
+  groupFrom = Power
+  groupTo (Power x) = x
+  identity = Power 0
+  inverse (Power x) = Power ((m - x) `mod` m)
     where
       m = fromIntegral (natVal (Proxy @n))
-  combine (CyclicGroup x) (CyclicGroup y) = CyclicGroup ((x + y) `mod` m)
+  combine (Power x) (Power y) = Power ((x + y) `mod` m)
     where
       m = fromIntegral (natVal (Proxy @n))
 
 -- | Reify a runtime order @n@ into a type-level cyclic group and hand the
 -- resulting 'Group' instance to a polymorphic continuation.
-cyclicGroup :: Int -> (forall g p. Group g Int => Proxy (g, Int) -> h) -> h
+cyclicGroup :: Int -> (forall g. Group g Int => Proxy (g, Int) -> h) -> h
 cyclicGroup n f =
   case someNatVal (fromIntegral n) of
-    SomeNat (_ :: Proxy m) -> f (Proxy @(CyclicGroup m, Int))
+    SomeNat (_ :: Proxy m) -> f (Proxy @(Power m, Int))
 
 -- TODO fix
 -- generateSubgroup :: forall g. Group g => Set g -> Set g
@@ -61,12 +62,6 @@ orderElement x = test 1 x where
   test n y
     | y == identity = n
     | otherwise = test (n + 1) (combine x y)
-
--- isAbelian :: forall g p. Group g p => Proxy g -> Bool
--- isAbelian _ = all (\(x, y) -> combine x y == combine y x) pairs
---   where
---     pairs :: [(g, g)]
---     pairs = [(x, y) | x <- elements, y <- elements]
 
 commutes :: forall g p. Group g p => g -> g -> Bool
 commutes x y = combine x y == combine y x
@@ -90,4 +85,20 @@ label _ = case fromSing (sing @f) of
 
 myWidget :: Widget ('Foo (FromString "widget") 3)
 myWidget = Widget { widgetId = 42 }
+
+newtype DihedralElement (n :: Nat) = DihedralElement (Bool, Int) deriving (Show, Eq, Ord)
+
+instance KnownNat n => Group (DihedralElement n) (Bool, Int) where
+  elements = Set.fromList $ DihedralElement <$> vals2 where
+    modulus = fromIntegral (natVal (Proxy @n))
+    vals = [0 .. ]
+    vals2 = [ (b, x) | b <- [True, False], x <- vals]
+  groupFrom = DihedralElement
+  groupTo (DihedralElement bx) = bx
+  identity = DihedralElement (False, 0)
+  inverse (DihedralElement (b, x)) = DihedralElement (b, (modulus - x) `mod` modulus) where
+    modulus = fromIntegral (natVal (Proxy @n))
+  combine (DihedralElement (b, x)) (DihedralElement (c, y)) = DihedralElement (xor b c, (x + y) `mod` modulus)
+    where
+      modulus = fromIntegral (natVal (Proxy @n))
 
