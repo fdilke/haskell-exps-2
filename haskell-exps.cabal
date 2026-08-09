@@ -96,7 +96,7 @@ test-suite haskell-exps-test
 
 library langfeatures
   import: warnings, commonSettings
-  build-depends:   base, containers
+  build-depends:   base, containers, singletons-base
   hs-source-dirs:  src
   exposed-modules: FastLane,
                    KickTyres,

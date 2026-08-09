@@ -3,8 +3,12 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 module Group(cyclicGroup, Group(..), orderElement, isAbelian) where
@@ -13,9 +17,10 @@ import Data.Proxy (Proxy (..))
 import GHC.TypeNats (KnownNat, Nat, SomeNat (..), natVal, someNatVal)
 import Data.Set (Set)
 import Data.Set qualified as Set
+import Data.Singletons.Base.TH
 
-class (Eq g, Show g) => Group g p | g -> p where
-  elements :: [g]
+class (Eq g, Ord g,Show g) => Group g p | g -> p where
+  elements :: Set g
   groupFrom :: p -> g
   groupTo :: g -> p
   identity :: g
@@ -23,10 +28,10 @@ class (Eq g, Show g) => Group g p | g -> p where
   combine :: g -> g -> g
 
 -- | The cyclic group Z/nZ, with the modulus @n@ carried at the type level.
-newtype CyclicGroup (n :: Nat) = CyclicGroup Int deriving (Show, Eq)
+newtype CyclicGroup (n :: Nat) = CyclicGroup Int deriving (Show, Eq, Ord)
 
 instance KnownNat n => Group (CyclicGroup n) Int where
-  elements = CyclicGroup <$> [0 .. fromIntegral (natVal (Proxy @n)) - 1]
+  elements = Set.fromList $ CyclicGroup <$> [0 .. fromIntegral (natVal (Proxy @n)) - 1]
   groupFrom = CyclicGroup
   groupTo (CyclicGroup x) = x
   identity = CyclicGroup 0
@@ -68,5 +73,20 @@ isAbelian :: forall g p. Group g p =>  Bool
 isAbelian = all (uncurry commutes) pairs
   where
     pairs :: [(g, g)]
-    pairs = [(x, y) | x <- elements, y <- elements]
+    pairs = [(x, y) | x <- groupElements, y <- groupElements]
+    groupElements = Set.toList elements
     
+$(singletons [d|
+  data Foo = Foo { fooName :: String, fooCount :: Nat }
+    deriving (Show, Eq)
+  |])
+  
+newtype Widget (f :: Foo) = Widget { widgetId :: Int }
+
+label :: forall f. SingI f => Widget f -> String
+label _ = case fromSing (sing @f) of
+  Foo nm cnt -> nm ++ " x" ++ show cnt
+
+myWidget :: Widget ('Foo (FromString "widget") 3)
+myWidget = Widget { widgetId = 42 }
+
