@@ -54,7 +54,7 @@ orderElement x = test 1 x where
     | y == identity = n
     | otherwise = test (n + 1) (combine x y)
 
-isAbelian :: forall g p. Group g p => Proxy (g, p) -> Bool
+isAbelian :: forall g p. Group g p => Proxy g -> Bool
 isAbelian _ = all (\(x, y) -> combine x y == combine y x) pairs
   where
     pairs :: [(g, g)]
