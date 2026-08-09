@@ -61,8 +61,11 @@ orderElement x = test 1 x where
 --     pairs :: [(g, g)]
 --     pairs = [(x, y) | x <- elements, y <- elements]
 
+commutes :: forall g p. Group g p => g -> g -> Bool
+commutes x y = combine x y == combine y x
+
 isAbelian :: forall g p. Group g p =>  Bool
-isAbelian = all (\(x, y) -> combine x y == combine y x) pairs
+isAbelian = all (uncurry commutes) pairs
   where
     pairs :: [(g, g)]
     pairs = [(x, y) | x <- elements, y <- elements]
