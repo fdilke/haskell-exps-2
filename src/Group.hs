@@ -11,9 +11,9 @@
 
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
-module Group(Group(..), cyclicGroup, orderElement, isAbelian) where
+module Group(Group(..), cyclicGroup, dihedralGroup, orderElement,
+  orderGroup, isAbelian) where
 
-import Data.Proxy (Proxy (..))
 import GHC.TypeNats (KnownNat, Nat, SomeNat (..), natVal, someNatVal)
 import Data.Set (Set)
 import Data.Set qualified as Set
@@ -46,14 +46,17 @@ instance KnownNat n => Group (Power n) Int where
 
 -- | Reify a runtime order @n@ into a type-level cyclic group and hand the
 -- resulting 'Group' instance to a polymorphic continuation.
-cyclicGroup :: Int -> (forall g. Group g Int => Proxy g -> h) -> h
+cyclicGroup :: Int -> (forall g. Group g Int => h) -> h
 cyclicGroup n f =
   case someNatVal (fromIntegral n) of
-    SomeNat (_ :: Proxy m) -> f (Proxy @(Power m))
+    SomeNat (_ :: Proxy m) -> f @(Power m)
 
 -- TODO fix
 -- generateSubgroup :: forall g. Group g => Set g -> Set g
 -- generateSubgroup set = set
+
+orderGroup :: forall g p. Group g p => {- Proxy g -> -} Int
+orderGroup = Set.size (elements @g @p)
 
 orderElement :: forall g p. Group g p => g -> Int
 -- orderElement x = length $ generateSubgroup $ Set.singleton x
@@ -96,5 +99,9 @@ instance KnownNat n => Group (DihedralElement n) (Bool, Int) where
   identity = DihedralElement (False, 0)
   inverse (DihedralElement (b, x)) = DihedralElement (b, (nat @n - x) `mod` nat @n)
   combine (DihedralElement (b, x)) (DihedralElement (c, y)) =
-    DihedralElement (xor b c, (x + y) `mod` nat @n)
+    DihedralElement (xor b c, (if c then y - x + nat @n else y + x) `mod` nat @n)
 
+dihedralGroup :: Int -> (forall g. Group g (Bool, Int) => {- Proxy g -> -} h) -> h
+dihedralGroup n f =
+  case someNatVal (fromIntegral n) of
+    SomeNat (_ :: Proxy m) -> f @(DihedralElement m)
