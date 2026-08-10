@@ -12,7 +12,7 @@ spec :: Spec
 spec = do
   describe "CyclicGroup (Z/5Z)" $ do
     it "has correct orders" $
-      cyclicGroup 6 (\(Proxy :: Proxy (g, Int)) -> do
+      cyclicGroup 6 (\(Proxy :: Proxy g) -> do
         -- combine (identity @g) (identity @g) `seq` (42 :: Int)
         --   `shouldBe` 42
         combine (identity @g) (identity @g) `shouldBe` (identity @g)
@@ -27,5 +27,5 @@ spec = do
       
   describe "cyclicGroup" $
     it "reifies a runtime order and runs the continuation over its Group" $
-      cyclicGroup 7 (\(Proxy :: Proxy (g, Int)) -> combine (identity @g) (identity @g) `seq` (42 :: Int))
+      cyclicGroup 7 (\(Proxy :: Proxy g) -> combine (identity @g) (identity @g) `seq` (42 :: Int))
         `shouldBe` 42

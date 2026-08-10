@@ -30,27 +30,26 @@ class (Eq g, Ord g,Show g) => Group g p | g -> p where
   elementsList :: [g]
   elementsList = Set.toList elements
 
--- | The cyclic group Z/nZ, with the modulus @n@ carried at the type level.
+nat :: forall n. KnownNat n => Int
+nat = fromIntegral (natVal (Proxy @n))
+
+-- | The cyclic group Z/nZ, with the nat @n@ carried at the type level.
 newtype Power (n :: Nat) = Power Int deriving (Show, Eq, Ord)
 
 instance KnownNat n => Group (Power n) Int where
-  elements = Set.fromList $ Power <$> [0 .. fromIntegral (natVal (Proxy @n)) - 1]
+  elements = Set.fromList $ Power <$> [0 .. nat @n - 1]
   groupFrom = Power
   groupTo (Power x) = x
   identity = Power 0
-  inverse (Power x) = Power ((m - x) `mod` m)
-    where
-      m = fromIntegral (natVal (Proxy @n))
-  combine (Power x) (Power y) = Power ((x + y) `mod` m)
-    where
-      m = fromIntegral (natVal (Proxy @n))
+  inverse (Power x) = Power ((nat @n - x) `mod` nat @n)
+  combine (Power x) (Power y) = Power ((x + y) `mod` nat @n)
 
 -- | Reify a runtime order @n@ into a type-level cyclic group and hand the
 -- resulting 'Group' instance to a polymorphic continuation.
-cyclicGroup :: Int -> (forall g. Group g Int => Proxy (g, Int) -> h) -> h
+cyclicGroup :: Int -> (forall g. Group g Int => Proxy g -> h) -> h
 cyclicGroup n f =
   case someNatVal (fromIntegral n) of
-    SomeNat (_ :: Proxy m) -> f (Proxy @(Power m, Int))
+    SomeNat (_ :: Proxy m) -> f (Proxy @(Power m))
 
 -- TODO fix
 -- generateSubgroup :: forall g. Group g => Set g -> Set g
@@ -90,15 +89,12 @@ newtype DihedralElement (n :: Nat) = DihedralElement (Bool, Int) deriving (Show,
 
 instance KnownNat n => Group (DihedralElement n) (Bool, Int) where
   elements = Set.fromList $ DihedralElement <$> vals2 where
-    modulus = fromIntegral (natVal (Proxy @n))
-    vals = [0 .. ]
+    vals = [0 .. nat @n - 1]
     vals2 = [ (b, x) | b <- [True, False], x <- vals]
   groupFrom = DihedralElement
   groupTo (DihedralElement bx) = bx
   identity = DihedralElement (False, 0)
-  inverse (DihedralElement (b, x)) = DihedralElement (b, (modulus - x) `mod` modulus) where
-    modulus = fromIntegral (natVal (Proxy @n))
-  combine (DihedralElement (b, x)) (DihedralElement (c, y)) = DihedralElement (xor b c, (x + y) `mod` modulus)
-    where
-      modulus = fromIntegral (natVal (Proxy @n))
+  inverse (DihedralElement (b, x)) = DihedralElement (b, (nat @n - x) `mod` nat @n)
+  combine (DihedralElement (b, x)) (DihedralElement (c, y)) =
+    DihedralElement (xor b c, (x + y) `mod` nat @n)
 
