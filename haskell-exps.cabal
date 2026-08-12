@@ -63,6 +63,15 @@ common commonSettings
     ImportQualifiedPost
     BlockArguments
     TypeFamilies
+    AllowAmbiguousTypes
+    TemplateHaskell
+    FunctionalDependencies
+    RankNTypes
+    DataKinds
+    PolyKinds
+    GADTs
+    UndecidableInstances
+
   ghc-options: -threaded -Wunused-packages
 
 common warnings

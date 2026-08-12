@@ -7,6 +7,8 @@ module Test.GroupSpec where
 
 import Group
 import Test.Hspec
+import Data.Foldable (for_)
+import Debug.Trace (trace)
 
 spec :: Spec
 spec = do
@@ -15,8 +17,8 @@ spec = do
       cyclicGroup 6 (\ @g -> do
         -- combine (identity @g) (identity @g) `seq` (42 :: Int)
         --   `shouldBe` 42
+        checkGroup @g 6
         combine (identity @g) (identity @g) `shouldBe` (identity @g)
-        orderGroup @g `shouldBe` 6
         orderElement (groupFrom @g 0) `shouldBe` 1
         orderElement (groupFrom @g 1) `shouldBe` 6
         orderElement (groupFrom @g 2) `shouldBe` 3
@@ -29,8 +31,7 @@ spec = do
   describe "DihedralGroup D_12" $ do
     it "has correct orders" $
       dihedralGroup 6 (\ @g -> do
-        -- combine (identity @g) (identity @g) `seq` (42 :: Int)
-        --   `shouldBe` 42
+        checkGroup @g 12
         combine (identity @g) (identity @g) `shouldBe` (identity @g)
         orderGroup @g `shouldBe` 12
         orderElement (groupFrom @g (False, 0)) `shouldBe` 1
@@ -43,3 +44,20 @@ spec = do
         orderElement (groupFrom @g (True, 3)) `shouldBe` 2
         isAbelian @g `shouldBe` False
       )
+
+checkGroup :: forall g p. Group g p => Int -> Expectation
+checkGroup expectedOrder = do
+  orderGroup @g `shouldBe` expectedOrder
+  for_ (elementsList @g) $ \a -> do
+    trace ("checking element " ++ show a) $ do
+      combine a (identity @g) `shouldBe` a
+      combine (identity @g) a `shouldBe` a
+    combine (inverse a) a `shouldBe` (identity @g)
+    combine a (inverse a) `shouldBe` (identity @g)
+    for_ (elementsList @g) $ \b -> do
+      for_ (elementsList @g) $ \c -> do
+        combine a (combine b c) `shouldBe` combine (combine a b) c
+
+{-
+  should my groups extend Monoid, and then use <> instead of combine?
+-}
