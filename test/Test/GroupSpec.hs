@@ -17,16 +17,10 @@ spec = do
   describe "CyclicGroup (Z/5Z)" $ do
     it "has correct orders" $
       cyclicGroup 6 (\ @g -> do
-        -- combine (identity @g) (identity @g) `seq` (42 :: Int)
-        --   `shouldBe` 42
         checkGroup @g 6
-        (mempty @g) <> (mempty @g) `shouldBe` (mempty @g)
-        orderElement (groupFrom @g 0) `shouldBe` 1
-        orderElement (groupFrom @g 1) `shouldBe` 6
-        orderElement (groupFrom @g 2) `shouldBe` 3
-        orderElement (groupFrom @g 3) `shouldBe` 2
-        orderElement (groupFrom @g 4) `shouldBe` 3
-        orderElement (groupFrom @g 5) `shouldBe` 6
+        orders @g [
+          0, 1, 2, 3, 4, 5
+          ] `shouldBe` [1, 6, 3, 2, 3, 6]
         isAbelian @g `shouldBe` True
       )
 
@@ -34,16 +28,10 @@ spec = do
     it "has correct orders" $
       dihedralGroup 6 (\ @g -> do
         checkGroup @g 12
-        (mempty @g) <> (mempty @g) `shouldBe` (mempty @g)
-        orderGroup @g `shouldBe` 12
-        orderElement (groupFrom @g (False, 0)) `shouldBe` 1
-        orderElement (groupFrom @g (False, 1)) `shouldBe` 6
-        orderElement (groupFrom @g (False, 2)) `shouldBe` 3
-        orderElement (groupFrom @g (False, 3)) `shouldBe` 2
-        orderElement (groupFrom @g (True, 0)) `shouldBe` 2
-        orderElement (groupFrom @g (True, 1)) `shouldBe` 2
-        orderElement (groupFrom @g (True, 2)) `shouldBe` 2
-        orderElement (groupFrom @g (True, 3)) `shouldBe` 2
+        orders @g [
+          (False, 0), (False, 1), (False, 2), (False, 3),
+          (True, 0), (True, 1), (True, 2), (True, 3)
+          ] `shouldBe` [1, 6, 3, 2, 2, 2, 2, 2]
         isAbelian @g `shouldBe` False
       )
 
@@ -51,9 +39,12 @@ spec = do
     it "has correct orders" $
       permutationGroup 4 (\ @g -> do
         checkGroup @g 24
-        orderElement . groupFrom @g <$> [[0..3], [1, 0, 3, 2], [2, 1, 3, 0],[1, 2, 3, 0]] `shouldBe` [1, 2, 3, 4]
+        orders @g [[0..3], [1, 0, 3, 2], [2, 1, 3, 0], [1, 2, 3, 0]] `shouldBe` [1, 2, 3, 4]
         isAbelian @g `shouldBe` False
       )
+
+orders :: forall g p. Group g p => [p] -> [Int]
+orders ps = orderElement . groupFrom @g <$> ps
 
 checkGroup :: forall g p. Group g p => Int -> Expectation
 checkGroup expectedOrder = do
