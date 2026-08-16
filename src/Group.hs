@@ -5,6 +5,7 @@ module Group (
   Group (..),
   cyclicGroup,
   dihedralGroup,
+  permutationGroup,
   orderElement,
   orderGroup,
   isAbelian,
@@ -15,6 +16,7 @@ import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Singletons.Base.TH
 import GHC.TypeNats (KnownNat, Nat, SomeNat (..), natVal, someNatVal)
+import Data.List
 
 class (Eq g, Ord g, Show g, Monoid g) => Group g p | g -> p where
   elements :: Set g
@@ -116,3 +118,28 @@ dihedralGroup :: Int -> (forall g. (Group g (Bool, Int {- Proxy g -> -})) => h) 
 dihedralGroup n f =
   case someNatVal (fromIntegral n) of
     SomeNat (_ :: Proxy m) -> f @(DihedralElement m)
+
+newtype Permutation (n :: Nat) = Permutation [Int] deriving (Show, Eq, Ord)
+
+instance (KnownNat n) => Semigroup (Permutation n) where
+  (<>) (Permutation p) (Permutation q) =
+    Permutation ((p !!) <$> q)
+
+instance (KnownNat n) => Monoid (Permutation n) where
+  mempty = Permutation [0 .. nat @n - 1]
+
+instance (KnownNat n) => Group (Permutation n) [Int] where
+  elements = Set.fromList $ Permutation <$> vals
+   where
+    vals = permutations [0 .. nat @n - 1]
+  groupFrom = Permutation
+  groupTo (Permutation p) = p
+  inverse (Permutation p) =
+    let n = length p
+        q = replicate n 0
+     in Permutation $ foldr (\(i, j) acc -> take j acc ++ [i] ++ drop (j + 1) acc) q (zip [0 ..] p)
+
+permutationGroup :: Int -> (forall g. (Group g [Int]) => h) -> h
+permutationGroup n f =
+  case someNatVal (fromIntegral n) of
+    SomeNat (_ :: Proxy m) -> f @(Permutation m)

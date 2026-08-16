@@ -47,6 +47,14 @@ spec = do
         isAbelian @g `shouldBe` False
       )
 
+  describe "Permutation group S_4" $ do
+    it "has correct orders" $
+      permutationGroup 4 (\ @g -> do
+        checkGroup @g 24
+        orderElement . groupFrom @g <$> [[0..3], [1, 0, 3, 2], [2, 1, 3, 0],[1, 2, 3, 0]] `shouldBe` [1, 2, 3, 4]
+        isAbelian @g `shouldBe` False
+      )
+
 checkGroup :: forall g p. Group g p => Int -> Expectation
 checkGroup expectedOrder = do
   orderGroup @g `shouldBe` expectedOrder
