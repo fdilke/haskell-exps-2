@@ -2,6 +2,8 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeAbstractions #-}
+{- HLINT ignore "Monoid law, right identity" -}
+{- HLINT ignore "Monoid law, left identity" -}
 
 module Test.GroupSpec where
 
@@ -18,7 +20,7 @@ spec = do
         -- combine (identity @g) (identity @g) `seq` (42 :: Int)
         --   `shouldBe` 42
         checkGroup @g 6
-        combine (identity @g) (identity @g) `shouldBe` (identity @g)
+        (mempty @g) <> (mempty @g) `shouldBe` (mempty @g)
         orderElement (groupFrom @g 0) `shouldBe` 1
         orderElement (groupFrom @g 1) `shouldBe` 6
         orderElement (groupFrom @g 2) `shouldBe` 3
@@ -32,7 +34,7 @@ spec = do
     it "has correct orders" $
       dihedralGroup 6 (\ @g -> do
         checkGroup @g 12
-        combine (identity @g) (identity @g) `shouldBe` (identity @g)
+        (mempty @g) <> (mempty @g) `shouldBe` (mempty @g)
         orderGroup @g `shouldBe` 12
         orderElement (groupFrom @g (False, 0)) `shouldBe` 1
         orderElement (groupFrom @g (False, 1)) `shouldBe` 6
@@ -50,14 +52,12 @@ checkGroup expectedOrder = do
   orderGroup @g `shouldBe` expectedOrder
   for_ (elementsList @g) $ \a -> do
     trace ("checking element " ++ show a) $ do
-      combine a (identity @g) `shouldBe` a
-      combine (identity @g) a `shouldBe` a
-    combine (inverse a) a `shouldBe` (identity @g)
-    combine a (inverse a) `shouldBe` (identity @g)
+      a <> mempty @g `shouldBe` a
+      mempty @g <> a `shouldBe` a
     for_ (elementsList @g) $ \b -> do
       for_ (elementsList @g) $ \c -> do
-        combine a (combine b c) `shouldBe` combine (combine a b) c
+        a <> (b <> c) `shouldBe` (a <> b) <> c
 
 {-
-  should my groups extend Monoid, and then use <> instead of combine?
+  groups now extend Monoid,
 -}

@@ -16,13 +16,11 @@ import Data.Set qualified as Set
 import Data.Singletons.Base.TH
 import GHC.TypeNats (KnownNat, Nat, SomeNat (..), natVal, someNatVal)
 
-class (Eq g, Ord g, Show g) => Group g p | g -> p where
+class (Eq g, Ord g, Show g, Monoid g) => Group g p | g -> p where
   elements :: Set g
   groupFrom :: p -> g
   groupTo :: g -> p
-  identity :: g
   inverse :: g -> g
-  combine :: g -> g -> g
   elementsList :: [g]
   elementsList = Set.toList elements
 
@@ -42,9 +40,7 @@ instance (KnownNat n) => Group (Power n) Int where
   elements = Set.fromList $ Power <$> [0 .. nat @n - 1]
   groupFrom = Power
   groupTo (Power x) = x
-  identity = Power 0
   inverse (Power x) = Power ((nat @n - x) `mod` nat @n)
-  combine (Power x) (Power y) = Power ((x + y) `mod` nat @n)
 
 {- | Reify a runtime order @n@ into a type-level cyclic group and hand the
 resulting 'Group' instance to a polymorphic continuation.
@@ -66,11 +62,11 @@ orderElement :: forall g p. (Group g p) => g -> Int
 orderElement x = test 1 x
  where
   test n y
-    | y == identity = n
-    | otherwise = test (n + 1) (combine x y)
+    | y == mempty = n
+    | otherwise = test (n + 1) (x <> y)
 
 commutes :: forall g p. (Group g p) => g -> g -> Bool
-commutes x y = combine x y == combine y x
+commutes x y = x <> y == y <> x
 
 isAbelian :: forall g p. (Group g p) => Bool
 isAbelian = all (uncurry commutes) pairs
@@ -110,14 +106,11 @@ instance (KnownNat n) => Group (DihedralElement n) (Bool, Int) where
     vals2 = [(b, x) | b <- [True, False], x <- vals]
   groupFrom = DihedralElement
   groupTo (DihedralElement bx) = bx
-  identity = DihedralElement (False, 0)
   inverse e@(DihedralElement (b, x)) =
     if b
       then e
       else
         DihedralElement (False, (nat @n - x) `mod` nat @n)
-  combine (DihedralElement (b, x)) (DihedralElement (c, y)) =
-    DihedralElement (xor b c, (if c then y - x + nat @n else y + x) `mod` nat @n)
 
 dihedralGroup :: Int -> (forall g. (Group g (Bool, Int {- Proxy g -> -})) => h) -> h
 dihedralGroup n f =
