@@ -29,6 +29,12 @@ class (Eq g, Ord g, Show g) => Group g p | g -> p where
 nat :: forall n. (KnownNat n) => Int
 nat = fromIntegral (natVal (Proxy @n))
 
+instance (KnownNat n) => Semigroup (Power n) where
+  (<>) (Power x) (Power y) = Power ((x + y) `mod` nat @n)
+
+instance (KnownNat n) => Monoid (Power n) where
+  mempty = Power 0
+  
 -- | The cyclic group Z/nZ, with the nat @n@ carried at the type level.
 newtype Power (n :: Nat) = Power Int deriving (Show, Eq, Ord)
 
@@ -89,6 +95,13 @@ myWidget :: Widget ('Foo (FromString "widget") 3)
 myWidget = Widget{widgetId = 42}
 
 newtype DihedralElement (n :: Nat) = DihedralElement (Bool, Int) deriving (Show, Eq, Ord)
+
+instance (KnownNat n) => Semigroup (DihedralElement n) where
+  (<>) (DihedralElement (b, x)) (DihedralElement (c, y)) =
+    DihedralElement (xor b c, (if c then y - x + nat @n else y + x) `mod` nat @n)
+
+instance (KnownNat n) => Monoid (DihedralElement n) where
+  mempty = DihedralElement (False, 0)
 
 instance (KnownNat n) => Group (DihedralElement n) (Bool, Int) where
   elements = Set.fromList $ DihedralElement <$> vals2
