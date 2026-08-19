@@ -6,6 +6,7 @@ module Group (
   cyclicGroup,
   dihedralGroup,
   permutationGroup,
+  unitsMod,
   orderElement,
   orderGroup,
   isAbelian,
@@ -17,6 +18,7 @@ import Data.Set qualified as Set
 import Data.Singletons.Base.TH
 import GHC.TypeNats (KnownNat, Nat, SomeNat (..), natVal, someNatVal)
 import Data.List
+import Data.Maybe (listToMaybe)
 
 class (Eq g, Ord g, Show g, Monoid g) => Group g p | g -> p where
   elements :: Set g
@@ -143,3 +145,35 @@ permutationGroup :: Int -> (forall g. (Group g [Int]) => h) -> h
 permutationGroup n f =
   case someNatVal (fromIntegral n) of
     SomeNat (_ :: Proxy m) -> f @(Permutation m)
+
+-- gcd :: Int -> Int -> Int
+-- gcd m n
+--   | m < n = gcd n m
+--   | m == n = m
+--   | otherwise = gcd (m `mod` n) n
+
+newtype UnitMod (n :: Nat) = UnitMod Int deriving (Show, Eq, Ord)
+
+instance (KnownNat n) => Semigroup (UnitMod n) where
+  (<>) (UnitMod a) (UnitMod b) =
+    UnitMod $ (a * b) `mod` (nat @n)
+
+instance (KnownNat n) => Monoid (UnitMod n) where
+  mempty = UnitMod 1
+
+instance (KnownNat n) => Group (UnitMod n) Int where
+  elements = Set.fromList $ UnitMod <$> vals
+   where
+    theN = nat @n
+    vals = [ a | a <- [1 .. theN - 1], gcd a theN == 1 ]
+  groupFrom = UnitMod
+  groupTo (UnitMod a) = a
+  inverse (UnitMod a) =
+    case listToMaybe [ b | b <- [1 .. nat @n - 1], (a * b) `mod` nat @n== 1 ] of
+      Just c -> UnitMod c
+      _ -> UnitMod 1
+
+unitsMod :: Int -> (forall g. (Group g Int) => h) -> h
+unitsMod n f =
+  case someNatVal (fromIntegral n) of
+    SomeNat (_ :: Proxy m) -> f @(UnitMod m)
