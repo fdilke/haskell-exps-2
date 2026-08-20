@@ -1,4 +1,5 @@
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeAbstractions #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 module Group (
@@ -20,6 +21,7 @@ import Data.Singletons.Base.TH
 import GHC.TypeNats (KnownNat, Nat, SomeNat (..), natVal, someNatVal)
 import Data.List
 import Data.Maybe (listToMaybe)
+import Control.Exception (throw, AssertionFailed (AssertionFailed))
 
 class (Eq g, Ord g, Show g, Monoid g) => Group g p | g -> p where
   elements :: Set g
@@ -246,12 +248,10 @@ instance (SingI f) => Group (MetacyclicElement f) (Int, Int) where
 
 metacyclic :: Int -> Int -> (forall g. (Group g (Int, Int)) => h) -> h
 metacyclic p q block =
-  let r :: Int = 2
-    -- r = unitsMod p \ @g ->
-    --     case find (q == orderElement @g) (elementsList @g) of
-    --       Just x -> groupTo @g x
-    --       Nothing -> 1
-                          -- 7 :: Int
+  let r :: Int = unitsMod p \ @g ->
+        case find (\x -> q == orderElement @g x) (elementsList @g) of
+                  Just x -> groupTo @g x
+                  Nothing -> throw $ AssertionFailed "no suitable exponent found"
   in case (
     someNatVal (fromIntegral p), 
     someNatVal (fromIntegral q), 

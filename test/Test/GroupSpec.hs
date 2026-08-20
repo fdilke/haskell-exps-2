@@ -11,6 +11,8 @@ import Group
 import Test.Hspec
 import Data.Foldable (for_)
 import Debug.Trace (trace)
+import Control.Exception (evaluate, throw, AssertionFailed (AssertionFailed))
+import Data.List (find)
 
 spec :: Spec
 spec = do
@@ -55,11 +57,20 @@ spec = do
         orders @g [1, 2, 4, 5, 7, 8] `shouldBe` [1, 6, 3, 6, 3, 2]
         isAbelian @g `shouldBe` True
 
-  describe "Metacyclic group of order 6" $ do
-    it "has correct orders" $ do
+  describe "Metacyclic groups" $ do
+    it "detects bad parameters" $ do
+      evaluate (metacyclic 3 3 \ @_ -> 
+        throw $ AssertionFailed "hurby burbly"
+        ) `shouldThrow` anyException
+    it "correctly calculated for order 6" $
       metacyclic 3 2 \ @g -> do
         checkGroup @g 6
         orders @g [(0, 0), (0, 1), (1, 0), (1, 1), (2, 0), (2, 1)] `shouldBe` [1, 3, 2, 2, 2, 3]
+        isAbelian @g `shouldBe` False
+    it "correctly calculated for order 21" $
+      metacyclic 7 3 \ @g -> do
+        checkGroup @g 21
+        orders @g [(0, 0), (0, 1), (1, 0)] `shouldBe` [1, 7, 3]
         isAbelian @g `shouldBe` False
 
 orders :: forall g p. Group g p => [p] -> [Int]
@@ -69,13 +80,12 @@ checkGroup :: forall g p. Group g p => Int -> Expectation
 checkGroup expectedOrder = do
   orderGroup @g `shouldBe` expectedOrder
   for_ (elementsList @g) $ \a -> do
-    trace ("checking element " ++ show a) $ do
-      a <> mempty @g `shouldBe` a
-      mempty @g <> a `shouldBe` a
+    a <> mempty @g `shouldBe` a
+    mempty @g <> a `shouldBe` a
     for_ (elementsList @g) $ \b -> do
       for_ (elementsList @g) $ \c -> do
         a <> (b <> c) `shouldBe` (a <> b) <> c
 
 {-
-  add metaCyclics
+  to do: calculations with subgroups
 -}
