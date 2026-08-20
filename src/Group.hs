@@ -154,6 +154,10 @@ permutationGroup n f =
 
 newtype UnitMod (n :: Nat) = UnitMod Int deriving (Show, Eq, Ord)
 
+-- newtype UnitMod (n :: Nat) where
+--   UnitMod :: Int -> UnitMod n
+--   deriving (Show, Eq, Ord)
+
 instance (KnownNat n) => Semigroup (UnitMod n) where
   (<>) (UnitMod a) (UnitMod b) =
     UnitMod $ (a * b) `mod` (nat @n)
@@ -177,3 +181,23 @@ unitsMod :: Int -> (forall g. (Group g Int) => h) -> h
 unitsMod n f =
   case someNatVal (fromIntegral n) of
     SomeNat (_ :: Proxy m) -> f @(UnitMod m)
+
+$( singletons
+     [d|
+       data MetacyclicData = MetacyclicData { theP :: Nat, theQ :: Nat }
+         deriving (Show, Eq)
+       |]
+ )
+
+newtype MetacyclicWidget (f :: MetacyclicData) = MetacyclicWidget { metaId :: Int }
+
+meta_label :: forall f. (SingI f) => MetacyclicWidget f -> String
+meta_label _ = case fromSing (sing @f) of
+  MetacyclicData p q -> "P: " ++ show p ++ ", Q: " ++ show q
+
+metaWidget :: MetacyclicWidget ('MetacyclicData 7 3)
+metaWidget = MetacyclicWidget {metaId = 42}
+
+instance (SingI f) => Semigroup (MetacyclicWidget f) where
+  (<>) (MetacyclicWidget w1) (MetacyclicWidget w2) = case fromSing (sing @f) of
+    MetacyclicData p q -> MetacyclicWidget { metaId = w1 +  w2 }
