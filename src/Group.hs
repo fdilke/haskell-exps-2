@@ -7,6 +7,7 @@ module Group (
   dihedralGroup,
   permutationGroup,
   unitsMod,
+  metacyclic,
   orderElement,
   orderGroup,
   isAbelian,
@@ -36,7 +37,7 @@ instance (KnownNat n) => Semigroup (Power n) where
 
 instance (KnownNat n) => Monoid (Power n) where
   mempty = Power 0
-  
+
 -- | The cyclic group Z/nZ, with the nat @n@ carried at the type level.
 newtype Power (n :: Nat) = Power Int deriving (Show, Eq, Ord)
 
@@ -182,22 +183,82 @@ unitsMod n f =
   case someNatVal (fromIntegral n) of
     SomeNat (_ :: Proxy m) -> f @(UnitMod m)
 
+powMod :: Int -> Int -> Int -> Int
+powMod _ 0 m = 1
+powMod base exp m
+  | even exp  = let half = powMod base (exp `div` 2) m
+                in (half * half) `mod` m
+  | otherwise = (base `mod` m * powMod base (exp - 1) m) `mod` m
+
 $( singletons
      [d|
-       data MetacyclicData = MetacyclicData { theP :: Nat, theQ :: Nat }
+       data MetacyclicData = MetacyclicData { theP :: Nat, theQ :: Nat, theR :: Nat }
          deriving (Show, Eq)
        |]
  )
 
-newtype MetacyclicWidget (f :: MetacyclicData) = MetacyclicWidget { metaId :: Int }
+data MetacyclicElement (f :: MetacyclicData) = MetacyclicElement {
+  bExp :: Int,
+  aExp :: Int  -- representing b^bExp * a^aExp in G = <a, b | a^p = 1, b^q = a^r, a^b = a^r>
+} deriving (Show, Eq, Ord)
 
-meta_label :: forall f. (SingI f) => MetacyclicWidget f -> String
+meta_label :: forall f. (SingI f) => MetacyclicElement f -> String
 meta_label _ = case fromSing (sing @f) of
-  MetacyclicData p q -> "P: " ++ show p ++ ", Q: " ++ show q
+  MetacyclicData p q r -> "P: " ++ show p ++ ", Q: " ++ show q ++ ", R: " ++ show r
 
-metaWidget :: MetacyclicWidget ('MetacyclicData 7 3)
-metaWidget = MetacyclicWidget {metaId = 42}
+metaWidget :: MetacyclicElement ('MetacyclicData 7 3 2)
+metaWidget = MetacyclicElement {bExp = 42, aExp = 42}
 
-instance (SingI f) => Semigroup (MetacyclicWidget f) where
-  (<>) (MetacyclicWidget w1) (MetacyclicWidget w2) = case fromSing (sing @f) of
-    MetacyclicData p q -> MetacyclicWidget { metaId = w1 +  w2 }
+instance (SingI f) => Semigroup (MetacyclicElement f) where
+  (<>) (MetacyclicElement x y) (MetacyclicElement z w) = case fromSing (sing @f) of
+    MetacyclicData pp qq rr -> let
+      p :: Int = fromIntegral pp
+      q :: Int = fromIntegral qq
+      r :: Int = fromIntegral rr
+      in MetacyclicElement {
+            bExp = (x + z) `mod` q,
+            aExp = (y * powMod r z p + w) `mod` p
+          }
+
+instance (SingI f) => Monoid (MetacyclicElement f) where
+  mempty = MetacyclicElement { bExp = 0, aExp = 0 }
+
+instance (SingI f) => Group (MetacyclicElement f) (Int, Int) where
+  elements = case fromSing (sing @f) of
+    MetacyclicData pp qq _ -> let
+      p :: Int = fromIntegral pp
+      q :: Int = fromIntegral qq
+      in Set.fromList do
+        x <- [0 .. q - 1]
+        y <- [0 .. p - 1]
+        pure MetacyclicElement { bExp = x, aExp = y }
+  groupFrom (b, a) = MetacyclicElement { bExp = b, aExp = a }
+  groupTo (MetacyclicElement b a) = (b, a)
+  inverse (MetacyclicElement x y) =
+    case fromSing (sing @f) of
+    MetacyclicData pp qq rr -> let
+      p :: Int = fromIntegral pp
+      q :: Int = fromIntegral qq
+      r :: Int = fromIntegral rr
+      in MetacyclicElement {
+        bExp = q - x, aExp = q - (y * powMod r (q - x) p) `mod` p
+      }
+
+metacyclic :: Int -> Int -> (forall g. (Group g (Int, Int)) => h) -> h
+metacyclic p q block =
+  let r :: Int = 2
+    -- r = unitsMod p \ @g ->
+    --     case find (q == orderElement @g) (elementsList @g) of
+    --       Just x -> groupTo @g x
+    --       Nothing -> 1
+                          -- 7 :: Int
+  in case (
+    someNatVal (fromIntegral p), 
+    someNatVal (fromIntegral q), 
+    someNatVal (fromIntegral r)
+    ) of ( 
+          SomeNat (_ :: Proxy mp), 
+          SomeNat (_ :: Proxy mq), 
+          SomeNat (_ :: Proxy mr)
+          ) ->
+          block @(MetacyclicElement ('MetacyclicData mp mq mr))

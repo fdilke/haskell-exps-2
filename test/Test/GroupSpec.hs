@@ -55,6 +55,13 @@ spec = do
         orders @g [1, 2, 4, 5, 7, 8] `shouldBe` [1, 6, 3, 6, 3, 2]
         isAbelian @g `shouldBe` True
 
+  describe "Metacyclic group of order 6" $ do
+    it "has correct orders" $ do
+      metacyclic 3 2 \ @g -> do
+        checkGroup @g 6
+        orders @g [(0, 0), (0, 1), (1, 0), (1, 1), (2, 0), (2, 1)] `shouldBe` [1, 3, 2, 2, 2, 3]
+        isAbelian @g `shouldBe` False
+
 orders :: forall g p. Group g p => [p] -> [Int]
 orders ps = orderElement . groupFrom @g <$> ps
 
