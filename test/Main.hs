@@ -12,6 +12,9 @@ import qualified Test.GraphSpec as Graph
 import qualified Test.GroupSpec as Group
 import qualified Test.FieldSpec as Field
 import qualified Test.Algorithms.BacktrackSpec as Backtrack
+import Field as Fuld
+-- import qualified Field as Fuld
+import Control.Monad.IO.Class (liftIO)
 
 main :: IO ()
 main = hspec $ do
@@ -26,5 +29,6 @@ main = hspec $ do
     describe "Group" Group.spec
     describe "Backtrack" Backtrack.spec
     describe "Field" Field.spec
+    -- runIO Fuld.outputConway
 
 
