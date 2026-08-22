@@ -101,6 +101,7 @@ test-suite haskell-exps-test
                     Test.RecordTypesSpec,
                     Test.GraphSpec,
                     Test.GroupSpec,
+                    Test.FieldSpec,
                     Test.Algorithms.BacktrackSpec
 
 library langfeatures
@@ -115,7 +116,8 @@ library langfeatures
                    RecordTypes,
                    FancyToposStuff,
                    Graph,
-                   Group,   
+                   Group,
+                   Field,   
                    Algorithms.Backtrack
 
 executable haskell-exps
