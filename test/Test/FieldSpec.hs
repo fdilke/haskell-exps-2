@@ -12,11 +12,15 @@ module Test.FieldSpec where
 import Data.Either (isRight)
 import Graph
 import Test.Hspec
+import Field (FieldTable(..), FieldTableOps(..))
 
 spec :: Spec
 spec = do
   describe "Finite field algebra" $ do
-    it "a..." $ do
-      True `shouldBe` True
+    it "can construct field tables" $ do
+      let ft = FieldTable 5 2 [2,4]
+      ft.prime `shouldBe` 5
+      ft.power `shouldBe` 2
+      ft.primitive `shouldBe` [2,4]
 
   
