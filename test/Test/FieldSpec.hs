@@ -43,5 +43,7 @@ spec = do
       mulPolys ft [1, 1] [1, 1] `shouldBe` [4, 3]
       mulPolys ft [1, 2] [3, 4] `shouldBe` [2, 3]
       mulPolys ft [2, 1] [4, 3] `shouldBe` [2, 3]
+      mulPolys ft [2, 1] (inversePoly ft [2, 1]) `shouldBe` [1, 0]
+      inversePoly ft [2, 1] `shouldBe` [1, 3]
 
   

@@ -29,6 +29,7 @@ class FieldTableOps ft where
     scalarMult :: ft -> Int -> [Int] -> [Int]
     shift :: ft -> [Int] -> [Int]
     mulPolys :: ft -> [Int] -> [Int] -> [Int]
+    inversePoly :: ft -> [Int] -> [Int]
 
 instance FieldTableOps FieldTable where
     intToPoly :: FieldTable -> Int -> [Int]
@@ -62,11 +63,17 @@ instance FieldTableOps FieldTable where
             zeroPoly = take ft.power (repeat 0)
             combine (shifted, sum) coefft =
                 (shift ft shifted, addPolys ft sum $ scalarMult ft coefft shifted)
-        -- foldr (addPoly ft) summands (take ft.power (repeat 0))
-        -- where
-        --     summands = zip p1 (0..ft.power) <&> \c i ->
-                
-        -- foldr (\(i, j) acc -> take j acc ++ [i] ++ drop (j + 1) acc) q (zip [0 ..] p)
+    inversePoly :: FieldTable -> [Int] -> [Int]
+    inversePoly ft p =
+        case ft.prime ^ ft.power of
+        2 -> p
+        pn -> associativeOpPower (mulPolys ft) p (pn - 2)
+
+associativeOpPower :: (a -> a -> a) -> a -> Int -> a
+associativeOpPower op x n
+    | n == 1 = x
+    | n `mod` 2 == 1 = op x (associativeOpPower op x (n -1))
+    | otherwise = op y y where y = associativeOpPower op x (n `div` 2)
 
 conwayLists :: [[Int]] = [
     [2,1,1],
