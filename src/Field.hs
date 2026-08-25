@@ -6,7 +6,7 @@ import Data.Functor ((<&>))
 import Data.Text qualified as T
 import Data.Char (isDigit)
 import Data.Function (on)
-import Data.List (groupBy)
+import Data.List (groupBy, unsnoc)
 
 -- outputConway :: IO ()
 -- outputConway = do
@@ -26,6 +26,8 @@ class FieldTableOps ft where
     polyToInt :: ft -> [Int] -> Int
     addPolys :: ft -> [Int] -> [Int] -> [Int]
     negPoly :: ft -> [Int] -> [Int]
+    scalarMult :: ft -> Int -> [Int] -> [Int]
+    shift :: ft -> [Int] -> [Int]
 
 instance FieldTableOps FieldTable where
     intToPoly :: FieldTable -> Int -> [Int]
@@ -45,6 +47,13 @@ instance FieldTableOps FieldTable where
     negPoly :: FieldTable -> [Int] -> [Int]
     negPoly ft p =
         p <&> (ft.prime -)
+    scalarMult :: FieldTable -> Int -> [Int] -> [Int]
+    scalarMult ft s p =
+        p <&> \a -> ((s * a) `mod` ft.prime)
+    shift :: FieldTable -> [Int] -> [Int]
+    shift ft p = case unsnoc p of
+        Nothing -> []
+        Just (lait, x) -> addPolys ft (0 : lait) $ scalarMult ft (ft.prime - x) ft.primitive
 
 conwayLists :: [[Int]] = [
     [2,1,1],

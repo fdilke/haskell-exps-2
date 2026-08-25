@@ -34,5 +34,7 @@ spec = do
       addPolys ft [3, 4] [3, 4] `shouldBe` [1, 3]
       negPoly ft [2, 1] `shouldBe` [3, 4]
       negPoly ft [3, 4] `shouldBe` [2, 1]
+      scalarMult ft 2 [3, 4] `shouldBe` [1, 3]
+      shift ft [3, 4] `shouldBe` [2, 2]
 
   
