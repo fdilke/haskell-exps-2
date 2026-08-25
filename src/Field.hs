@@ -33,17 +33,15 @@ instance FieldTableOps FieldTable where
         intToPolySub k ft.power
         where
             intToPolySub k n =
-                if (n == 0) then []
+                if n == 0 then []
                 else (k `mod` ft.prime) : intToPolySub (k `div` ft.prime) (n-1)
     polyToInt :: FieldTable -> [Int] -> Int
     polyToInt ft poly = case poly of
         [] -> 0
         x : xs -> x + ft.prime * polyToInt ft xs
     addPolys :: FieldTable -> [Int] -> [Int] -> [Int]
-    addPolys ft p1 p2 =
-        zipWith combine p1 p2
-        where
-            combine a b = (a + b) `mod` ft.prime
+    addPolys ft =
+        zipWith \a b -> (a + b) `mod` ft.prime
     negPoly :: FieldTable -> [Int] -> [Int]
     negPoly ft p =
         p <&> (ft.prime -)
