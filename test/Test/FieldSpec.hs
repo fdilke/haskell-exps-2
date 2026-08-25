@@ -22,5 +22,9 @@ spec = do
       ft.prime `shouldBe` 5
       ft.power `shouldBe` 2
       ft.primitive `shouldBe` [2,4]
+      intToPoly ft 0 `shouldBe` [0, 0]
+      intToPoly ft 2 `shouldBe` [2, 0]
+      intToPoly ft 7 `shouldBe` [2, 1]
+      intToPoly ft 23 `shouldBe` [3, 4]
 
   

@@ -27,8 +27,16 @@ class FieldTableOps ft where
 
 instance FieldTableOps FieldTable where
     intToPoly :: FieldTable -> Int -> [Int]
-    intToPoly ft k =
-        [ k ]
+    intToPoly ft k = 
+        let intToPolySub k n =
+                if (n == 0) then []
+                else (k `mod` ft.prime) : intToPolySub (k `div` ft.prime) (n-1)
+        in intToPolySub k ft.power
+        -- intHash k n 
+        -- where
+        --     intHash x y = []
+
+
     polyToInt :: FieldTable -> [Int] -> Int
     polyToInt ft poly =
         length poly
