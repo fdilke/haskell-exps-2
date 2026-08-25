@@ -26,5 +26,9 @@ spec = do
       intToPoly ft 2 `shouldBe` [2, 0]
       intToPoly ft 7 `shouldBe` [2, 1]
       intToPoly ft 23 `shouldBe` [3, 4]
+      polyToInt ft [0, 0] `shouldBe` 0
+      polyToInt ft [2, 0] `shouldBe` 2
+      polyToInt ft [2, 1] `shouldBe` 7
+      polyToInt ft [3, 4] `shouldBe` 23
 
   

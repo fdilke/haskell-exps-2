@@ -28,18 +28,16 @@ class FieldTableOps ft where
 instance FieldTableOps FieldTable where
     intToPoly :: FieldTable -> Int -> [Int]
     intToPoly ft k = 
-        let intToPolySub k n =
+        intToPolySub k ft.power
+        where
+            intToPolySub k n =
                 if (n == 0) then []
                 else (k `mod` ft.prime) : intToPolySub (k `div` ft.prime) (n-1)
-        in intToPolySub k ft.power
-        -- intHash k n 
-        -- where
-        --     intHash x y = []
-
-
     polyToInt :: FieldTable -> [Int] -> Int
-    polyToInt ft poly =
-        length poly
+    polyToInt ft poly = case poly of
+        [] -> 0
+        x : xs -> x + ft.prime * polyToInt ft xs
+
 conwayLists :: [[Int]] = [
     [2,1,1],
     [2,2,1,1],
