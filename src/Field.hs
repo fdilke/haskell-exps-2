@@ -24,6 +24,7 @@ data FieldTable = FieldTable {
 class FieldTableOps ft where
     intToPoly :: ft -> Int -> [Int]
     polyToInt :: ft -> [Int] -> Int
+    addPolys :: ft -> [Int] -> [Int] -> [Int]
 
 instance FieldTableOps FieldTable where
     intToPoly :: FieldTable -> Int -> [Int]
@@ -37,6 +38,11 @@ instance FieldTableOps FieldTable where
     polyToInt ft poly = case poly of
         [] -> 0
         x : xs -> x + ft.prime * polyToInt ft xs
+    addPolys :: FieldTable -> [Int] -> [Int] -> [Int]
+    addPolys ft p1 p2 =
+        zipWith combine p1 p2
+        where
+            combine a b = (a + b) `mod` ft.prime
 
 conwayLists :: [[Int]] = [
     [2,1,1],

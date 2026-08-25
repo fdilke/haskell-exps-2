@@ -30,5 +30,7 @@ spec = do
       polyToInt ft [2, 0] `shouldBe` 2
       polyToInt ft [2, 1] `shouldBe` 7
       polyToInt ft [3, 4] `shouldBe` 23
+      addPolys ft [2, 1] [3, 4] `shouldBe` [0, 0]
+      addPolys ft [3, 4] [3, 4] `shouldBe` [1, 3]
 
   
