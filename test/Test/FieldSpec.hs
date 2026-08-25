@@ -17,7 +17,7 @@ import Field (FieldTable(..), FieldTableOps(..))
 spec :: Spec
 spec = do
   describe "Finite field algebra" $ do
-    it "can construct field tables" $ do
+    it "can construct field tables for GF(25)" $ do
       let ft = FieldTable 5 2 [2,4]
       ft.prime `shouldBe` 5
       ft.power `shouldBe` 2
@@ -36,5 +36,12 @@ spec = do
       negPoly ft [3, 4] `shouldBe` [2, 1]
       scalarMult ft 2 [3, 4] `shouldBe` [1, 3]
       shift ft [3, 4] `shouldBe` [2, 2]
+      mulPolys ft [2, 0] [3, 0] `shouldBe` [1, 0]
+      mulPolys ft [2, 0] [0, 1] `shouldBe` [0, 2]
+      mulPolys ft [0, 1] [0, 1] `shouldBe` [3, 1]
+      mulPolys ft [0, 2] [0, 3] `shouldBe` [3, 1]
+      mulPolys ft [1, 1] [1, 1] `shouldBe` [4, 3]
+      mulPolys ft [1, 2] [3, 4] `shouldBe` [2, 3]
+      mulPolys ft [2, 1] [4, 3] `shouldBe` [2, 3]
 
   
