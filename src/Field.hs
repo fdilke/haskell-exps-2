@@ -2,7 +2,7 @@
 module Field(FieldTable(..), FieldTableOps(..))
 where
 import Data.Text(Text)
-
+import Data.Functor ((<&>))
 import Data.Text qualified as T
 import Data.Char (isDigit)
 import Data.Function (on)
@@ -25,6 +25,7 @@ class FieldTableOps ft where
     intToPoly :: ft -> Int -> [Int]
     polyToInt :: ft -> [Int] -> Int
     addPolys :: ft -> [Int] -> [Int] -> [Int]
+    negPoly :: ft -> [Int] -> [Int]
 
 instance FieldTableOps FieldTable where
     intToPoly :: FieldTable -> Int -> [Int]
@@ -43,6 +44,9 @@ instance FieldTableOps FieldTable where
         zipWith combine p1 p2
         where
             combine a b = (a + b) `mod` ft.prime
+    negPoly :: FieldTable -> [Int] -> [Int]
+    negPoly ft p =
+        p <&> (ft.prime -)
 
 conwayLists :: [[Int]] = [
     [2,1,1],
