@@ -30,8 +30,6 @@ class Switch g p where
 
 class (Eq g, Ord g, Show g, Monoid g) => Group g p | g -> p where
   elements :: Set g
-  groupFrom :: p -> g
-  groupTo :: g -> p
   inverse :: g -> g
   elementsList :: [g]
   elementsList = Set.toList elements
@@ -50,8 +48,6 @@ newtype Power (n :: Nat) = Power Int deriving (Show, Eq, Ord)
 
 instance (KnownNat n) => Group (Power n) Int where
   elements = Set.fromList $ Power <$> [0 .. nat @n - 1]
-  groupFrom = Power
-  groupTo (Power x) = x
   inverse (Power x) = Power ((nat @n - x) `mod` nat @n)
 
 instance (KnownNat n) => Switch (Power n) Int where
@@ -120,8 +116,6 @@ instance (KnownNat n) => Group (DihedralElement n) (Bool, Int) where
    where
     vals = [0 .. nat @n - 1]
     vals2 = [(b, x) | b <- [True, False], x <- vals]
-  groupFrom = DihedralElement
-  groupTo (DihedralElement bx) = bx
   inverse e@(DihedralElement (b, x)) =
     if b
       then e
@@ -150,8 +144,6 @@ instance (KnownNat n) => Group (Permutation n) [Int] where
   elements = Set.fromList $ Permutation <$> vals
    where
     vals = permutations [0 .. nat @n - 1]
-  groupFrom = Permutation
-  groupTo (Permutation p) = p
   inverse (Permutation p) =
     let n = length p
         q = replicate n 0
@@ -180,8 +172,6 @@ instance (KnownNat n) => Group (UnitMod n) Int where
    where
     theN = nat @n
     vals = [ a | a <- [1 .. theN - 1], gcd a theN == 1 ]
-  groupFrom = UnitMod
-  groupTo (UnitMod a) = a
   inverse (UnitMod a) =
     case listToMaybe [ b | b <- [1 .. nat @n - 1], (a * b) `mod` nat @n== 1 ] of
       Just c -> UnitMod c
@@ -245,8 +235,6 @@ instance (SingI f) => Group (MetacyclicElement f) (Int, Int) where
         x <- [0 .. q - 1]
         y <- [0 .. p - 1]
         pure MetacyclicElement { bExp = x, aExp = y }
-  groupFrom (b, a) = MetacyclicElement { bExp = b, aExp = a }
-  groupTo (MetacyclicElement b a) = (b, a)
   inverse (MetacyclicElement x y) =
     case fromSing (sing @f) of
     MetacyclicData pp qq rr -> let
@@ -265,7 +253,7 @@ metacyclic :: Int -> Int -> (forall g. (Group g (Int, Int), Switch g (Int, Int))
 metacyclic p q block =
   let r :: Int = unitsMod p \ @g ->
         case find (\x -> q == orderElement @g x) (elementsList @g) of
-                  Just x -> groupTo @g x
+                  Just x -> switchTo @g x
                   Nothing -> throw $ AssertionFailed "no suitable exponent found"
   in case (
     someNatVal (fromIntegral p), 
