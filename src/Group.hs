@@ -205,41 +205,42 @@ data MetacyclicElement (f :: MetacyclicData) = MetacyclicElement {
   aExp :: Int  -- representing b^bExp * a^aExp in G = <a, b | a^p = 1, b^q = a^r, a^b = a^r>
 } deriving (Show, Eq, Ord)
 
+{- | The type-level 'MetacyclicData' demoted once, to plain 'Int's, so the
+instances below can just say @m.p@ instead of unpacking a singleton each time.
+-}
+data MetacyclicParams = MetacyclicParams {p :: Int, q :: Int, r :: Int}
+
+metaParams :: forall (f :: MetacyclicData). (SingI f) => MetacyclicParams
+metaParams = case fromSing (sing @f) of
+  MetacyclicData pp qq rr ->
+    MetacyclicParams (fromIntegral pp) (fromIntegral qq) (fromIntegral rr)
+
 metaWidget :: MetacyclicElement ('MetacyclicData 7 3 2)
 metaWidget = MetacyclicElement { bExp = 42, aExp = 42 }
 
 instance (SingI f) => Semigroup (MetacyclicElement f) where
-  (<>) (MetacyclicElement x y) (MetacyclicElement z w) = case fromSing (sing @f) of
-    MetacyclicData pp qq rr -> let
-      p :: Int = fromIntegral pp
-      q :: Int = fromIntegral qq
-      r :: Int = fromIntegral rr
-      in MetacyclicElement {
-            bExp = (x + z) `mod` q,
-            aExp = (y * powMod r z p + w) `mod` p
-          }
+  (<>) (MetacyclicElement x y) (MetacyclicElement z w) =
+    MetacyclicElement {
+      bExp = (x + z) `mod` m.q,
+      aExp = (y * powMod m.r z m.p + w) `mod` m.p
+    }
+   where m = metaParams @f
 
 instance (SingI f) => Monoid (MetacyclicElement f) where
   mempty = MetacyclicElement { bExp = 0, aExp = 0 }
 
 instance (SingI f) => Group (MetacyclicElement f) where
-  elements = case fromSing (sing @f) of
-    MetacyclicData pp qq _ -> let
-      p :: Int = fromIntegral pp
-      q :: Int = fromIntegral qq
-      in Set.fromList do
-        x <- [0 .. q - 1]
-        y <- [0 .. p - 1]
-        pure MetacyclicElement { bExp = x, aExp = y }
+  elements = Set.fromList do
+      x <- [0 .. m.q - 1]
+      y <- [0 .. m.p - 1]
+      pure MetacyclicElement { bExp = x, aExp = y }
+   where m = metaParams @f
   inverse (MetacyclicElement x y) =
-    case fromSing (sing @f) of
-    MetacyclicData pp qq rr -> let
-      p :: Int = fromIntegral pp
-      q :: Int = fromIntegral qq
-      r :: Int = fromIntegral rr
-      in MetacyclicElement {
-        bExp = q - x, aExp = q - (y * powMod r (q - x) p) `mod` p
-      }
+    MetacyclicElement {
+      bExp = m.q - x,
+      aExp = m.q - (y * powMod m.r (m.q - x) m.p) `mod` m.p
+    }
+   where m = metaParams @f
 
 instance (SingI f) => Switch (MetacyclicElement f) (Int, Int) where
   switchFrom (b, a) = MetacyclicElement { bExp = b, aExp = a }
