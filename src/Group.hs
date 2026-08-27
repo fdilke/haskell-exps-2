@@ -3,7 +3,8 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 module Group (
-  Group (..),
+  Group(..),
+  Switch(..),
   cyclicGroup,
   dihedralGroup,
   permutationGroup,
@@ -22,6 +23,10 @@ import GHC.TypeNats (KnownNat, Nat, SomeNat (..), natVal, someNatVal)
 import Data.List
 import Data.Maybe (listToMaybe)
 import Control.Exception (throw, AssertionFailed (AssertionFailed))
+
+class Switch g p where
+  switchFrom :: p -> g
+  switchTo :: g -> p
 
 class (Eq g, Ord g, Show g, Monoid g) => Group g p | g -> p where
   elements :: Set g
@@ -49,10 +54,14 @@ instance (KnownNat n) => Group (Power n) Int where
   groupTo (Power x) = x
   inverse (Power x) = Power ((nat @n - x) `mod` nat @n)
 
+instance (KnownNat n) => Switch (Power n) Int where
+  switchFrom = Power
+  switchTo (Power x) = x
+
 {- | Reify a runtime order @n@ into a type-level cyclic group and hand the
 resulting 'Group' instance to a polymorphic continuation.
 -}
-cyclicGroup :: Int -> (forall g. (Group g Int) => h) -> h
+cyclicGroup :: Int -> (forall g. (Group g Int, Switch g Int) => h) -> h
 cyclicGroup n f =
   case someNatVal (fromIntegral n) of
     SomeNat (_ :: Proxy m) -> f @(Power m)
@@ -119,7 +128,11 @@ instance (KnownNat n) => Group (DihedralElement n) (Bool, Int) where
       else
         DihedralElement (False, (nat @n - x) `mod` nat @n)
 
-dihedralGroup :: Int -> (forall g. (Group g (Bool, Int {- Proxy g -> -})) => h) -> h
+instance (KnownNat n) => Switch (DihedralElement n) (Bool, Int) where
+  switchFrom = DihedralElement
+  switchTo (DihedralElement bx) = bx
+
+dihedralGroup :: Int -> (forall g. (Group g (Bool, Int), Switch g (Bool, Int)) => h) -> h
 dihedralGroup n f =
   case someNatVal (fromIntegral n) of
     SomeNat (_ :: Proxy m) -> f @(DihedralElement m)
@@ -144,22 +157,16 @@ instance (KnownNat n) => Group (Permutation n) [Int] where
         q = replicate n 0
      in Permutation $ foldr (\(i, j) acc -> take j acc ++ [i] ++ drop (j + 1) acc) q (zip [0 ..] p)
 
-permutationGroup :: Int -> (forall g. (Group g [Int]) => h) -> h
+instance (KnownNat n) => Switch (Permutation n) [Int] where
+  switchFrom = Permutation
+  switchTo (Permutation p) = p
+
+permutationGroup :: Int -> (forall g. (Group g [Int], Switch g [Int]) => h) -> h
 permutationGroup n f =
   case someNatVal (fromIntegral n) of
     SomeNat (_ :: Proxy m) -> f @(Permutation m)
 
--- gcd :: Int -> Int -> Int
--- gcd m n
---   | m < n = gcd n m
---   | m == n = m
---   | otherwise = gcd (m `mod` n) n
-
 newtype UnitMod (n :: Nat) = UnitMod Int deriving (Show, Eq, Ord)
-
--- newtype UnitMod (n :: Nat) where
---   UnitMod :: Int -> UnitMod n
---   deriving (Show, Eq, Ord)
 
 instance (KnownNat n) => Semigroup (UnitMod n) where
   (<>) (UnitMod a) (UnitMod b) =
@@ -180,7 +187,11 @@ instance (KnownNat n) => Group (UnitMod n) Int where
       Just c -> UnitMod c
       _ -> UnitMod 1
 
-unitsMod :: Int -> (forall g. (Group g Int) => h) -> h
+instance (KnownNat n) => Switch (UnitMod n) Int where
+  switchFrom = UnitMod
+  switchTo (UnitMod a) = a
+
+unitsMod :: Int -> (forall g. (Group g Int, Switch g Int) => h) -> h
 unitsMod n f =
   case someNatVal (fromIntegral n) of
     SomeNat (_ :: Proxy m) -> f @(UnitMod m)
@@ -246,7 +257,11 @@ instance (SingI f) => Group (MetacyclicElement f) (Int, Int) where
         bExp = q - x, aExp = q - (y * powMod r (q - x) p) `mod` p
       }
 
-metacyclic :: Int -> Int -> (forall g. (Group g (Int, Int)) => h) -> h
+instance (SingI f) => Switch (MetacyclicElement f) (Int, Int) where
+  switchFrom (b, a) = MetacyclicElement { bExp = b, aExp = a }
+  switchTo (MetacyclicElement b a) = (b, a)
+
+metacyclic :: Int -> Int -> (forall g. (Group g (Int, Int), Switch g (Int, Int)) => h) -> h
 metacyclic p q block =
   let r :: Int = unitsMod p \ @g ->
         case find (\x -> q == orderElement @g x) (elementsList @g) of

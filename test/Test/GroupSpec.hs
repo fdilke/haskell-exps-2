@@ -73,8 +73,8 @@ spec = do
         orders @g [(0, 0), (0, 1), (1, 0)] `shouldBe` [1, 7, 3]
         isAbelian @g `shouldBe` False
 
-orders :: forall g p. Group g p => [p] -> [Int]
-orders ps = orderElement . groupFrom @g <$> ps
+orders :: forall g p. (Group g p, Switch g p) => [p] -> [Int]
+orders ps = orderElement . switchFrom @g <$> ps
 
 checkGroup :: forall g p. Group g p => Int -> Expectation
 checkGroup expectedOrder = do
