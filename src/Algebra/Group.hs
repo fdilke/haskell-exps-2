@@ -2,7 +2,7 @@
 {-# LANGUAGE TypeAbstractions #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
-module Group (
+module Algebra.Group (
   Group(..),
   Switch(..),
   cyclicGroup,
@@ -23,7 +23,7 @@ import GHC.TypeNats (KnownNat, Nat, SomeNat (..), natVal, someNatVal)
 import Data.List
 import Data.Maybe (listToMaybe)
 import Control.Exception (throw, AssertionFailed (AssertionFailed))
-
+import Utility.Utility
 class Switch g p where
   switchFrom :: p -> g
   switchTo :: g -> p
@@ -33,9 +33,6 @@ class (Eq g, Ord g, Show g, Monoid g) => Group g where
   inverse :: g -> g
   elementsList :: [g]
   elementsList = Set.toList elements
-
-nat :: forall n. (KnownNat n) => Int
-nat = fromIntegral (natVal (Proxy @n))
 
 instance (KnownNat n) => Semigroup (Power n) where
   (<>) (Power x) (Power y) = Power ((x + y) `mod` nat @n)
@@ -66,10 +63,10 @@ cyclicGroup n f =
 -- generateSubgroup :: forall g. Group g => Set g -> Set g
 -- generateSubgroup set = set
 
-orderGroup :: forall g p. (Group g) => Int
+orderGroup :: forall g. (Group g) => Int
 orderGroup = Set.size (elements @g)
 
-orderElement :: forall g p. (Group g) => g -> Int
+orderElement :: forall g. (Group g) => g -> Int
 -- orderElement x = length $ generateSubgroup $ Set.singleton x
 orderElement x = test 1 x
  where
@@ -77,30 +74,14 @@ orderElement x = test 1 x
     | y == mempty = n
     | otherwise = test (n + 1) (x <> y)
 
-commutes :: forall g p. (Group g) => g -> g -> Bool
+commutes :: forall g. (Group g) => g -> g -> Bool
 commutes x y = x <> y == y <> x
 
-isAbelian :: forall g p. (Group g) => Bool
+isAbelian :: forall g. (Group g) => Bool
 isAbelian = all (uncurry commutes) pairs
  where
   pairs :: [(g, g)]
   pairs = [(x, y) | x <- elementsList, y <- elementsList]
-
-$( singletons
-     [d|
-       data Foo = Foo {fooName :: String, fooCount :: Nat}
-         deriving (Show, Eq)
-       |]
- )
-
-newtype Widget (f :: Foo) = Widget {widgetId :: Int}
-
-label :: forall f. (SingI f) => Widget f -> String
-label _ = case fromSing (sing @f) of
-  Foo nm cnt -> nm ++ " x" ++ show cnt
-
-myWidget :: Widget ('Foo (FromString "widget") 3)
-myWidget = Widget{widgetId = 42}
 
 newtype DihedralElement (n :: Nat) = DihedralElement (Bool, Int) deriving (Show, Eq, Ord)
 
@@ -187,11 +168,11 @@ unitsMod n f =
     SomeNat (_ :: Proxy m) -> f @(UnitMod m)
 
 powMod :: Int -> Int -> Int -> Int
-powMod _ 0 m = 1
-powMod base exp m
-  | even exp  = let half = powMod base (exp `div` 2) m
+powMod _ 0 _ = 1
+powMod base exponent m
+  | even exponent  = let half = powMod base (exponent `div` 2) m
                 in (half * half) `mod` m
-  | otherwise = (base `mod` m * powMod base (exp - 1) m) `mod` m
+  | otherwise = (base `mod` m * powMod base (exponent - 1) m) `mod` m
 
 $( singletons
      [d|

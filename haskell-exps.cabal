@@ -100,8 +100,8 @@ test-suite haskell-exps-test
                     Test.OlogsSpec,
                     Test.RecordTypesSpec,
                     Test.GraphSpec,
-                    Test.GroupSpec,
-                    Test.FieldSpec,
+                    Test.Algebra.GroupSpec,
+                    Test.Algebra.FieldSpec,
                     Test.Algorithms.BacktrackSpec
 
 library langfeatures
@@ -116,9 +116,11 @@ library langfeatures
                    RecordTypes,
                    FancyToposStuff,
                    Graph,
-                   Group,
-                   Field,   
-                   Algorithms.Backtrack
+                   Algebra.Group,
+                   Algebra.Field,
+                   Algebra.ConwayTable,
+                   Algorithms.Backtrack,
+                   Utility.Utility
 
 executable haskell-exps
   import: warnings, commonSettings

@@ -7,12 +7,12 @@
 {-# LANGUAGE TypeApplications #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 
-module Test.FieldSpec where
+module Test.Algebra.FieldSpec where
 
 import Data.Either (isRight)
 import Graph
 import Test.Hspec
-import Field (FieldTable(..), FieldTableOps(..))
+import Algebra.Field (FieldTable(..), FieldTableOps(..))
 
 spec :: Spec
 spec = do

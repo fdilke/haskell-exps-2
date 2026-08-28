@@ -5,9 +5,9 @@
 {- HLINT ignore "Monoid law, right identity" -}
 {- HLINT ignore "Monoid law, left identity" -}
 
-module Test.GroupSpec where
+module Test.Algebra.GroupSpec where
 
-import Group
+import Algebra.Group
 import Test.Hspec
 import Data.Foldable (for_)
 import Debug.Trace (trace)
@@ -76,7 +76,7 @@ spec = do
 orders :: forall g p. (Group g, Switch g p) => [p] -> [Int]
 orders ps = orderElement . switchFrom @g <$> ps
 
-checkGroup :: forall g p. Group g => Int -> Expectation
+checkGroup :: forall g. Group g => Int -> Expectation
 checkGroup expectedOrder = do
   orderGroup @g `shouldBe` expectedOrder
   for_ (elementsList @g) $ \a -> do
