@@ -19,7 +19,7 @@ import Data.Bits (xor)
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Singletons.Base.TH
-import GHC.TypeNats (KnownNat, Nat, SomeNat (..), natVal, someNatVal)
+import GHC.TypeNats (KnownNat, Nat, SomeNat (..), someNatVal)
 import Data.List
 import Data.Maybe (listToMaybe)
 import Control.Exception (throw, AssertionFailed (AssertionFailed))
@@ -169,10 +169,10 @@ unitsMod n f =
 
 powMod :: Int -> Int -> Int -> Int
 powMod _ 0 _ = 1
-powMod base exponent m
-  | even exponent  = let half = powMod base (exponent `div` 2) m
+powMod base expt m
+  | even expt  = let half = powMod base (expt `div` 2) m
                 in (half * half) `mod` m
-  | otherwise = (base `mod` m * powMod base (exponent - 1) m) `mod` m
+  | otherwise = (base `mod` m * powMod base (expt - 1) m) `mod` m
 
 $( singletons
      [d|
@@ -195,9 +195,6 @@ metaParams :: forall (f :: MetacyclicData). (SingI f) => MetacyclicParams
 metaParams = case fromSing (sing @f) of
   MetacyclicData pp qq rr ->
     MetacyclicParams (fromIntegral pp) (fromIntegral qq) (fromIntegral rr)
-
-metaWidget :: MetacyclicElement ('MetacyclicData 7 3 2)
-metaWidget = MetacyclicElement { bExp = 42, aExp = 42 }
 
 instance (SingI f) => Semigroup (MetacyclicElement f) where
   (<>) (MetacyclicElement x y) (MetacyclicElement z w) =
