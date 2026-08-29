@@ -13,8 +13,10 @@ import Data.Either (isRight)
 import Graph
 import Test.Hspec
 import Algebra.Field (FieldTable(..), FieldTableOps(..))
-import Algebra.ConwayTable (conwayTable)
+import Algebra.ConwayTable (conwayTable, conwayTable2)
 import Debug.Trace (trace)
+import Data.Map (Map)
+import Data.Map qualified as Map
 
 spec :: Spec
 spec = do
@@ -47,8 +49,12 @@ spec = do
       mulPolys ft [2, 1] [4, 3] `shouldBe` [2, 3]
       mulPolys ft [2, 1] (inversePoly ft [2, 1]) `shouldBe` [1, 0]
       inversePoly ft [2, 1] `shouldBe` [1, 3]
-    it "are field tables sensib;le?" $ do
+    it "are field tables sensible?" $ do
       let h = take 3 conwayTable
+          k = trace ("the tables:" <> (show h)) 0
+      k `shouldBe` (0 :: Int)
+    it "are field tables2 sensible?" $ do
+      let h = take 3 (Map.toList conwayTable2)
           k = trace ("the tables:" <> (show h)) 0
       k `shouldBe` (0 :: Int)
 

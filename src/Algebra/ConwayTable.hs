@@ -1,11 +1,12 @@
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE MultilineStrings #-}
-module Algebra.ConwayTable(conwayTable)
+module Algebra.ConwayTable(conwayTable, conwayTable2)
 where
 import Data.Functor ((<&>))
 import Data.Map (Map)
 import Data.Map qualified as Map
 import Algebra.Field (FieldTable(..))
+import Control.Exception (throw, AssertionFailed (AssertionFailed))
 
 -- | Conway polynomials: each row is @prime, power, coefficients@.
 --
@@ -16,9 +17,9 @@ conwayTable :: [[Int]]
 conwayTable = map parseRow (lines raw)
 
 conwayTable2 :: Map Int FieldTable
-conwayTable2 = Map.fromList $ conwayTable <&> (\(p : n : primitive) ->
-  (p ^ n, FieldTable p n primitive)
-  )
+conwayTable2 = Map.fromList $ conwayTable <&> \case
+    (p : n : primitive) -> (p ^ n, FieldTable p n primitive)
+    _ -> throw $ AssertionFailed "malformed table"
 
 -- 'read' would cost ~0.3s of startup over the ~267k numbers here.
 parseRow :: String -> [Int]

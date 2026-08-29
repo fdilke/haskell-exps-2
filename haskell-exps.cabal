@@ -91,7 +91,7 @@ test-suite haskell-exps-test
   main-is:          Main.hs
 
   -- Test dependencies.
-  build-depends:    base, hspec, langfeatures, mtl
+  build-depends:    base, containers, hspec, langfeatures, mtl
   other-modules:    Test.FastLaneSpec,
                     Test.FooSpec,
                     Test.KickTyresSpec,
