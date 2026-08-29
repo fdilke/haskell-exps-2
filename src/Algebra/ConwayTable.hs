@@ -2,6 +2,10 @@
 {-# LANGUAGE MultilineStrings #-}
 module Algebra.ConwayTable(conwayTable)
 where
+import Data.Functor ((<&>))
+import Data.Map (Map)
+import Data.Map qualified as Map
+import Algebra.Field (FieldTable(..))
 
 -- | Conway polynomials: each row is @prime, power, coefficients@.
 --
@@ -10,6 +14,11 @@ where
 -- compiling this module took ~113s at -O1; this way it takes under a second.
 conwayTable :: [[Int]]
 conwayTable = map parseRow (lines raw)
+
+conwayTable2 :: Map Int FieldTable
+conwayTable2 = Map.fromList $ conwayTable <&> (\(p : n : primitive) ->
+  (p ^ n, FieldTable p n primitive)
+  )
 
 -- 'read' would cost ~0.3s of startup over the ~267k numbers here.
 parseRow :: String -> [Int]

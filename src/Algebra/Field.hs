@@ -9,7 +9,6 @@ import Data.Function (on)
 import Data.List (groupBy, unsnoc)
 import GHC.TypeNats (KnownNat, Nat, SomeNat (..), natVal, someNatVal)
 import Utility.Utility
-import Algebra.ConwayTable(conwayTable)
 
 data FieldTable = FieldTable { 
     prime :: Int,
