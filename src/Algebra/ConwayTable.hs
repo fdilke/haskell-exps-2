@@ -5,7 +5,7 @@ where
 import Data.Functor ((<&>))
 import Data.Map (Map)
 import Data.Map qualified as Map
-import Algebra.Field (FieldTable(..))
+import Algebra.Field (FieldTable(..), fieldTable)
 import Control.Exception (throw, AssertionFailed (AssertionFailed))
 
 -- | Conway polynomials: each row is @prime, power, coefficients@.
@@ -16,9 +16,9 @@ import Control.Exception (throw, AssertionFailed (AssertionFailed))
 conwayTable :: [[Int]]
 conwayTable = map parseRow (lines raw)
 
-conwayTable2 :: Map Int FieldTable
+conwayTable2 :: Map Int (() -> FieldTable)
 conwayTable2 = Map.fromList $ conwayTable <&> \case
-    (p : n : primitive) -> (p ^ n, FieldTable p n primitive)
+    (p : n : primitive) -> (p ^ n, \_ -> fieldTable p n primitive)
     _ -> throw $ AssertionFailed "malformed table"
 
 -- 'read' would cost ~0.3s of startup over the ~267k numbers here.

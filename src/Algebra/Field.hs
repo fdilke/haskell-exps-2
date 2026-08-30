@@ -1,5 +1,5 @@
 {-# LANGUAGE MultilineStrings #-}
-module Algebra.Field(FieldTable(..), FieldTableOps(..))
+module Algebra.Field(FieldTable(..), fieldTable)
 where
 import Data.Text(Text)
 import Data.Functor ((<&>))
@@ -9,94 +9,95 @@ import Data.Function (on)
 import Data.List (groupBy, unsnoc)
 import GHC.TypeNats (KnownNat, Nat, SomeNat (..), natVal, someNatVal)
 import Utility.Utility
+import Data.Map (Map)
+import Data.Map qualified as Map
 
 data FieldTable = FieldTable { 
-    prime :: Int,
-    power :: Int,
-    primitive :: [Int]
+    addTable :: Map (Int, Int) Int,
+    mulTable :: Map (Int, Int) Int,
+    invTable :: Map Int Int
   }
   deriving (Show, Eq)
-class FieldTableOps ft where
-    intToPoly :: ft -> Int -> [Int]
-    polyToInt :: ft -> [Int] -> Int
-    addPolys :: ft -> [Int] -> [Int] -> [Int]
-    negPoly :: ft -> [Int] -> [Int]
-    scalarMult :: ft -> Int -> [Int] -> [Int]
-    shift :: ft -> [Int] -> [Int]
-    mulPolys :: ft -> [Int] -> [Int] -> [Int]
-    inversePoly :: ft -> [Int] -> [Int]
-instance FieldTableOps FieldTable where
-    intToPoly :: FieldTable -> Int -> [Int]
-    intToPoly ft k = 
-        intToPolySub k ft.power
-        where
-            intToPolySub k n =
-                if n == 0 then []
-                else (k `mod` ft.prime) : intToPolySub (k `div` ft.prime) (n-1)
-    polyToInt :: FieldTable -> [Int] -> Int
-    polyToInt ft poly = case poly of
-        [] -> 0
-        x : xs -> x + ft.prime * polyToInt ft xs
-    addPolys :: FieldTable -> [Int] -> [Int] -> [Int]
-    addPolys ft =
-        zipWith \a b -> (a + b) `mod` ft.prime
-    negPoly :: FieldTable -> [Int] -> [Int]
-    negPoly ft p =
-        p <&> (ft.prime -)
-    scalarMult :: FieldTable -> Int -> [Int] -> [Int]
-    scalarMult ft s p =
-        p <&> \a -> (s * a) `mod` ft.prime
-    shift :: FieldTable -> [Int] -> [Int]
-    shift ft p = case unsnoc p of
-        Nothing -> []
-        Just (lait, x) -> addPolys ft (0 : lait) $ scalarMult ft (ft.prime - x) ft.primitive
-    mulPolys :: FieldTable -> [Int] -> [Int] -> [Int]
-    mulPolys ft p1 p2 =
-        snd $ foldl combine (p1, zeroPoly) p2
-        where
-            zeroPoly = take ft.power (repeat 0)
-            combine (shifted, sum) coefft =
-                (shift ft shifted, addPolys ft sum $ scalarMult ft coefft shifted)
-    inversePoly :: FieldTable -> [Int] -> [Int]
-    inversePoly ft p =
-        case ft.prime ^ ft.power of
-        2 -> p
-        pn -> associativeOpPower (mulPolys ft) p (pn - 2)
 
-associativeOpPower :: (a -> a -> a) -> a -> Int -> a
-associativeOpPower op x n
-    | n == 1 = x
-    | n `mod` 2 == 1 = op x (associativeOpPower op x (n -1))
-    | otherwise = op y y where y = associativeOpPower op x (n `div` 2)
+fieldTable :: Int -> Int -> [Int] -> FieldTable
+fieldTable prime power primitive =
+    FieldTable {
+        addTable = addTable,
+        mulTable = mulTable,
+        invTable = invTable
+    } where
+        pn = prime ^ power
+        domain = [0..(pn-1)]
+        smartNeg x =
+            if x == 0 then 0 else prime - x
+        addTable = tabulate2 domain domain \i j ->
+            polyToInt $
+                addPolys (intToPoly i) (intToPoly j)
+        mulTable = tabulate2 domain domain \i j ->
+            polyToInt $
+                mulPolys (intToPoly i) (intToPoly j)
+        invTable = tabulate domain $ polyToInt . negPoly . intToPoly
+        intToPoly :: Int -> [Int]
+        intToPoly k = 
+            intToPolySub k power
+            where
+                intToPolySub l n =
+                    if n == 0 then []
+                    else (l `mod` prime) : intToPolySub (l `div` prime) (n-1)
+        polyToInt :: [Int] -> Int
+        polyToInt = \case
+            [] -> 0
+            x : xs -> x + prime * polyToInt xs
+        addPolys :: [Int] -> [Int] -> [Int]
+        addPolys =
+            zipWith \a b -> (a + b) `mod` prime
+        negPoly :: [Int] -> [Int]
+        negPoly p =
+            p <&> smartNeg
+        scalarMult :: Int -> [Int] -> [Int]
+        scalarMult s p =
+            p <&> \a -> (s * a) `mod` prime
+        shift :: [Int] -> [Int]
+        shift p = case unsnoc p of
+            Nothing -> []
+            Just (lait, x) -> addPolys (0 : lait) $ scalarMult (smartNeg x) primitive
+        mulPolys :: [Int] -> [Int] -> [Int]
+        mulPolys p1 p2 =
+            snd $ foldl combine (p1, zeroPoly) p2
+            where
+                zeroPoly = replicate power 0
+                combine (shifted, sum) coefft =
+                    (shift shifted, addPolys sum $ scalarMult coefft shifted)
+        inversePoly :: [Int] -> [Int]
+        inversePoly p =
+            case prime ^ power of
+            2 -> p
+            pn -> associativeOpPower mulPolys p (pn - 2)
 
 newtype FieldElement (pn :: Nat) = FieldElement Int deriving (Show, Eq, Ord)
 
 instance (KnownNat pn) => Num (FieldElement pn) where
     (FieldElement a) + (FieldElement b) = FieldElement (
-        polyToInt ft $
-            addPolys ft (intToPoly ft a) (intToPoly ft b)
+        ft.addTable Map.! (a, b) 
         ) where
             ft = getFieldTable (nat @pn)
     (FieldElement a) - (FieldElement b) = FieldElement (
-        polyToInt ft $
-            addPolys ft (intToPoly ft a) (negPoly ft $ intToPoly ft b)
+        ft.mulTable Map.! (a, b) 
         ) where
             ft = getFieldTable (nat @pn)
     negate (FieldElement a) = FieldElement (
-        polyToInt ft $
-            negPoly ft $ intToPoly ft a
+        ft.invTable Map.! a
         ) where
             ft = getFieldTable (nat @pn)
     (FieldElement a) * (FieldElement b) = FieldElement (
-        polyToInt ft $
-            mulPolys ft (intToPoly ft a) (intToPoly ft b)
+        ft.mulTable Map.! (a, b) 
         ) where
             ft = getFieldTable (nat @pn)
     abs x = x
     signum (FieldElement n) = FieldElement (signum n)
-    fromInteger i = (FieldElement $ fromInteger i)
+    fromInteger i = FieldElement $ fromInteger i
 
 getFieldTable :: Int -> FieldTable
 getFieldTable pn =
-    FieldTable 5 2 [2,4] -- TODO: fix!
+    fieldTable 5 2 [2,4] -- TODO: fix!
 
