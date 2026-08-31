@@ -24,7 +24,9 @@ spec = do
   describe "Finite field algebra" $ do
     it "can construct field tables for GF(25)" $ do
       let ft :: FieldTable = fieldTable 5 2 [2,4]
-      ft.addTable Map.! (7, 23) `shouldBe` (0 :: Int)
+      ft.addTable Map.! (7, 23) `shouldBe` 0
+      ft.addTable Map.! (23, 23) `shouldBe` 16
+      ft.negTable Map.! 23 `shouldBe` 7
       -- addPolys ft [3, 4] [3, 4] `shouldBe` [1, 3]
       -- negPoly ft [2, 1] `shouldBe` [3, 4]
       -- negPoly ft [3, 4] `shouldBe` [2, 1]

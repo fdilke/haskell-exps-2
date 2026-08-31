@@ -15,6 +15,7 @@ import Data.Map qualified as Map
 data FieldTable = FieldTable { 
     addTable :: Map (Int, Int) Int,
     mulTable :: Map (Int, Int) Int,
+    negTable :: Map Int Int,
     invTable :: Map Int Int
   }
   deriving (Show, Eq)
@@ -23,6 +24,7 @@ fieldTable :: Int -> Int -> [Int] -> FieldTable
 fieldTable prime power primitive =
     FieldTable {
         addTable = addTable,
+        negTable = negTable,
         mulTable = mulTable,
         invTable = invTable
     } where
@@ -36,7 +38,8 @@ fieldTable prime power primitive =
         mulTable = tabulate2 domain domain \i j ->
             polyToInt $
                 mulPolys (intToPoly i) (intToPoly j)
-        invTable = tabulate domain $ polyToInt . negPoly . intToPoly
+        invTable = tabulate domain $ polyToInt . invPoly . intToPoly
+        negTable = tabulate domain $ polyToInt . negPoly . intToPoly
         intToPoly :: Int -> [Int]
         intToPoly k = 
             intToPolySub k power
@@ -68,11 +71,11 @@ fieldTable prime power primitive =
                 zeroPoly = replicate power 0
                 combine (shifted, sum) coefft =
                     (shift shifted, addPolys sum $ scalarMult coefft shifted)
-        inversePoly :: [Int] -> [Int]
-        inversePoly p =
-            case prime ^ power of
+        invPoly :: [Int] -> [Int]
+        invPoly p =
+            case pn of
             2 -> p
-            pn -> associativeOpPower mulPolys p (pn - 2)
+            _ -> associativeOpPower mulPolys p (pn - 2)
 
 newtype FieldElement (pn :: Nat) = FieldElement Int deriving (Show, Eq, Ord)
 
