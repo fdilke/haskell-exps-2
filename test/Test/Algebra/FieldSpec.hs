@@ -1,23 +1,23 @@
-{-# HLINT ignore "Use const" #-}
-{-# HLINT ignore "Unused LANGUAGE pragma" #-}
-{-# HLINT ignore "Avoid lambda" #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE NoFieldSelectors #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# LANGUAGE TypeApplications #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeAbstractions #-}
 
 module Test.Algebra.FieldSpec where
 
 import Data.Either (isRight)
 import Graph
 import Test.Hspec
-import Algebra.Field (FieldTable(..), fieldTable)
-import Algebra.ConwayTable (conwayTable, conwayTable2)
+import Algebra.Field (FieldTable(..), fieldTable, withField)
+import Algebra.ConwayTable (conwayTable)
 import Debug.Trace (trace)
 import Data.Map (Map)
 import Data.Map qualified as Map
 import Data.Functor ((<&>))
+import Data.Foldable (for_)
 
 spec :: Spec
 spec = do
@@ -27,21 +27,13 @@ spec = do
       ft.addTable Map.! (7, 23) `shouldBe` 0
       ft.addTable Map.! (23, 23) `shouldBe` 16
       ft.negTable Map.! 23 `shouldBe` 7
-      -- addPolys ft [3, 4] [3, 4] `shouldBe` [1, 3]
-      -- negPoly ft [2, 1] `shouldBe` [3, 4]
-      -- negPoly ft [3, 4] `shouldBe` [2, 1]
-      -- scalarMult ft 2 [3, 4] `shouldBe` [1, 3]
-      -- shift ft [3, 4] `shouldBe` [2, 2]
-      -- mulPolys ft [2, 0] [3, 0] `shouldBe` [1, 0]
-      -- mulPolys ft [2, 0] [0, 1] `shouldBe` [0, 2]
-      -- mulPolys ft [0, 1] [0, 1] `shouldBe` [3, 1]
-      -- mulPolys ft [0, 2] [0, 3] `shouldBe` [3, 1]
-      -- mulPolys ft [1, 1] [1, 1] `shouldBe` [4, 3]
-      -- mulPolys ft [1, 2] [3, 4] `shouldBe` [2, 3]
-      -- mulPolys ft [2, 1] [4, 3] `shouldBe` [2, 3]
-      -- mulPolys ft [2, 1] (inversePoly ft [2, 1]) `shouldBe` [1, 0]
-      -- inversePoly ft [2, 1] `shouldBe` [1, 3]
-    it "are field tables sensible?" $ do
+      ft.mulTable Map.! (2, 3) `shouldBe` 1
+      ft.mulTable Map.! (2, 5) `shouldBe` 10
+      ft.mulTable Map.! (5, 5) `shouldBe` 8
+      ft.mulTable Map.! (10, 15) `shouldBe` 8
+      ft.mulTable Map.! (6, 6) `shouldBe` 19
+      ft.invTable Map.! 7 `shouldBe` 16
+    it "are field tables sensible? (0)" $ do
       let h = take 3 conwayTable
           k = trace ("the tables:" <> show h) 0
       k `shouldBe` (0 :: Int)
@@ -49,5 +41,35 @@ spec = do
     --   let h = take 3 (Map.toList conwayTable2) <&> \(_, f) -> f ()
     --       k = trace ("the tables:" <> show h) 0
     --   k `shouldBe` (0 :: Int)
+    -- it "are field tables2 sensible?" $ do
+    --   let (p, h) = head (Map.toList conwayTable2)
+    --       k = trace ("the tables:" <> show (h ())) 0
+    --   -- let h = (take 3 (Map.toList conwayTable2)) <&> \(_, f) -> f ()
+    --   --     k = trace ("the tables:" <> show h) 0
+    --   k `shouldBe` (0 :: Int)
+    it "can do field calculations in scope" $ do
+      withField 8 \ @f -> do
+        checkField @f 8
+
+checkField :: forall f. (Num f, Fractional f, Show f, Eq f) => Int -> Expectation
+checkField pn = do
+  -- orderGroup @g `shouldBe` expectedOrder
+  let elements :: [f] = [0..(pn-1)] <&> (fromInteger . toInteger)
+      zero = 0 :: f
+      one = 1 :: f
+      xx :: Int = 3
+      yy :: f = fromInteger (toInteger xx )
+  for_ elements $ \a -> do
+    a + zero `shouldBe` a
+    zero + a `shouldBe` a
+    a * one `shouldBe` a
+    one * a `shouldBe` a
+    for_ elements $ \b -> do
+      for_ elements $ \c -> do
+        a + (b + c) `shouldBe` (a + b) + c
+    -- TODO check more laws
+
+
+
 
   

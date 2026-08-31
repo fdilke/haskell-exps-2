@@ -24,6 +24,7 @@ import Data.List
 import Data.Maybe (listToMaybe)
 import Control.Exception (throw, AssertionFailed (AssertionFailed))
 import Utility.Utility
+
 class Switch g p where
   switchFrom :: p -> g
   switchTo :: g -> p

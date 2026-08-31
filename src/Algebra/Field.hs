@@ -1,8 +1,9 @@
 {-# LANGUAGE MultilineStrings #-}
-module Algebra.Field(FieldTable(..), fieldTable)
+module Algebra.Field(FieldTable(..), fieldTable, withField)
 where
 import Data.Text(Text)
 import Data.Functor ((<&>))
+import Data.Ratio
 import Data.Text qualified as T
 import Data.Char (isDigit)
 import Data.Function (on)
@@ -11,6 +12,11 @@ import GHC.TypeNats (KnownNat, Nat, SomeNat (..), natVal, someNatVal)
 import Utility.Utility
 import Data.Map (Map)
 import Data.Map qualified as Map
+import Algebra.ConwayTable
+import Data.Singletons.Base.TH
+import GHC.TypeNats (KnownNat, Nat, SomeNat (..), someNatVal)
+import Control.Exception (throw, AssertionFailed (AssertionFailed))
+import GHC.Real (Ratio(..))
 
 data FieldTable = FieldTable { 
     addTable :: Map (Int, Int) Int,
@@ -100,7 +106,26 @@ instance (KnownNat pn) => Num (FieldElement pn) where
     signum (FieldElement n) = FieldElement (signum n)
     fromInteger i = FieldElement $ fromInteger i
 
+instance (KnownNat pn) => Fractional (FieldElement pn) where
+  fromRational (a :% b) = FieldElement (
+    ft.mulTable Map.! (fromInteger a, ft.invTable Map.! fromInteger b)
+    ) where
+        ft = getFieldTable (nat @pn)
+  recip (FieldElement a) = FieldElement(
+    ft.invTable Map.! a  
+    )  where
+        ft = getFieldTable (nat @pn)
+
+fieldTableMap :: Map Int (() -> FieldTable)
+fieldTableMap = Map.fromList $ conwayTable <&> \case
+    (p : n : primitive) -> (p ^ n, \_ -> fieldTable p n primitive)
+    _ -> throw $ AssertionFailed "malformed table"
+
 getFieldTable :: Int -> FieldTable
 getFieldTable pn =
-    fieldTable 5 2 [2,4] -- TODO: fix!
+    (fieldTableMap Map.! pn) ()
 
+withField :: Int -> (forall g. (Num g, Fractional g, Show g, Eq g) => h) -> h
+withField pn f =
+  case someNatVal (fromIntegral pn) of
+    SomeNat (_ :: Proxy m) -> f @(FieldElement m)
