@@ -16,5 +16,8 @@ spec = do
         it "can calculate the square root of 3" $
             let root = mySqrt (3 :: Double) in
                 (printf "%.5f" root :: String) `shouldBe` "1.73205"
+        it "can calculate the square root of 5" $
+            let root = mySqrt (5 :: Double) in
+                (printf "%.5f" root :: String) `shouldBe` "2.23607"
 
 
