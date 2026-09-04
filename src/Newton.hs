@@ -13,17 +13,21 @@ closeEnough f tolerance est = abs (f est) < tolerance
 standardTolerance :: Fractional a => a
 standardTolerance = 1e-6
 
-myNewton :: Ord a => Fractional a => (a -> a) -> (a -> a) -> a -> a
-myNewton f f' x =
+nextIterate :: Ord a => Fractional a => (a -> a) -> (a -> a) -> a -> a
+nextIterate f f' x =
   x - f x / f' x
+
+myNewton :: forall a. Ord a => Fractional a => (a -> a) -> (a -> a) -> a -> a
+myNewton f f' start =
+  case find (closeEnough f standardTolerance) (iterate (nextIterate f f') start) of
+    Just root -> root
+    Nothing -> -1
 
 mySqrt :: forall a. Ord a => Fractional a => a -> a
 mySqrt q =
-   case find (closeEnough f standardTolerance) (iterate (myNewton f f') (q/2)) of
-     Just root -> root
-     Nothing -> -1
-    where
-      f :: a -> a
-      f x = x*x - q
-      f' :: a -> a
-      f' x = 2*x
+  myNewton f f' (q/2)
+  where
+    f :: a -> a
+    f x = x*x - q
+    f' :: a -> a
+    f' x = 2*x
