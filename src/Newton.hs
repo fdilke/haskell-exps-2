@@ -7,9 +7,6 @@ import Data.List(find)
 -- newt :: Fractional a => a -> a -> a
 -- newt q x = (x + q/x)/2
 
-closeEnough :: Ord a => Fractional a => (a -> a) -> a -> a -> Bool
-closeEnough f tolerance est = abs (f est) < tolerance
-
 standardTolerance :: Fractional a => a
 standardTolerance = 1e-6
 
@@ -19,10 +16,12 @@ nextIterate f f' x =
 
 myNewton :: forall a. Ord a => Fractional a => (a -> a) -> (a -> a) -> a -> a
 myNewton f f' start =
-  case find (closeEnough f standardTolerance) (iterate (nextIterate f f') start) of
+  case find closeEnough (iterate (nextIterate f f') start) of
     Just root -> root
     Nothing -> -1
-
+  where
+    closeEnough est = abs (f est) < standardTolerance
+    
 mySqrt :: forall a. Ord a => Fractional a => a -> a
 mySqrt q =
   myNewton f f' (q/2)
