@@ -17,6 +17,7 @@ import Data.Singletons.Base.TH
 import GHC.TypeNats (KnownNat, Nat, SomeNat (..), someNatVal)
 import Control.Exception (throw, AssertionFailed (AssertionFailed))
 import GHC.Real (Ratio(..))
+import Data.MemoTrie (memo)
 
 data FieldTable = FieldTable { 
     addTable :: Map (Int, Int) Int,
@@ -124,13 +125,14 @@ class (Num g, Fractional g, Show g, Eq g) => Field g where
 instance (KnownNat pn) => Field (FieldElement pn) where
   orderField = nat @pn
   -- fieldTable = getFieldTable $ nat @pn
+  fieldTable :: KnownNat pn => FieldTable
   fieldTable = (fieldTableMap Map.! (nat @pn)) () 
 
   fieldElements = [0..(nat @pn - 1)] <&> (fromInteger . toInteger)
 
 fieldTableMap :: Map Int (() -> FieldTable)
 fieldTableMap = Map.fromList $ conwayTable <&> \case
-    (p : n : primitive) -> (p ^ n, \_ -> mkFieldTable p n primitive)
+    (p : n : primitive) -> (p ^ n, memo \_ -> mkFieldTable p n primitive)
     _ -> throw $ AssertionFailed "malformed table"
 
 withField :: Int -> (forall g. Field g  => h) -> h
