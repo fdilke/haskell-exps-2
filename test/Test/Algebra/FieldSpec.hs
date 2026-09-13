@@ -11,7 +11,7 @@ module Test.Algebra.FieldSpec where
 import Data.Either (isRight)
 import Graph
 import Test.Hspec
-import Algebra.Field (FieldTable(..), mkFieldTable, withField)
+import Algebra.Field (FieldTable(..), Field(..), mkFieldTable, withField)
 import Algebra.ConwayTable (conwayTable)
 import Debug.Trace (trace)
 import Data.Map (Map)
@@ -51,9 +51,9 @@ spec = do
       withField 8 \ @f -> do
         checkField @f 8
 
-checkField :: forall f. (Num f, Fractional f, Show f, Eq f) => Int -> Expectation
+checkField :: forall f. Field f => Int -> Expectation
 checkField pn = do
-  -- orderGroup @g `shouldBe` expectedOrder
+  orderField @f `shouldBe` pn
   let elements :: [f] = [0..(pn-1)] <&> (fromInteger . toInteger)
       zero = 0 :: f
       one = 1 :: f

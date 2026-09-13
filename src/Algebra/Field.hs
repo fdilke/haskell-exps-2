@@ -1,5 +1,5 @@
 {-# LANGUAGE MultilineStrings #-}
-module Algebra.Field(FieldTable(..), mkFieldTable, withField)
+module Algebra.Field(FieldTable(..), Field(..), mkFieldTable, withField)
 where
 import Data.Text(Text)
 import Data.Functor ((<&>))
@@ -89,19 +89,19 @@ instance (KnownNat pn) => Num (FieldElement pn) where
     (FieldElement a) + (FieldElement b) = FieldElement (
         ft.addTable Map.! (a, b) 
         ) where
-            ft = getFieldTable (nat @pn)
+            ft = fieldTable @(FieldElement pn)
     (FieldElement a) - (FieldElement b) = FieldElement (
         ft.mulTable Map.! (a, b) 
         ) where
-            ft = getFieldTable (nat @pn)
+            ft = fieldTable @(FieldElement pn)
     negate (FieldElement a) = FieldElement (
         ft.invTable Map.! a
         ) where
-            ft = getFieldTable (nat @pn)
+            ft = fieldTable @(FieldElement pn)
     (FieldElement a) * (FieldElement b) = FieldElement (
         ft.mulTable Map.! (a, b) 
         ) where
-            ft = getFieldTable (nat @pn)
+            ft = fieldTable @(FieldElement pn)
     abs x = x
     signum (FieldElement n) = FieldElement (signum n)
     fromInteger i = FieldElement $ fromInteger i
@@ -116,12 +116,12 @@ instance (KnownNat pn) => Fractional (FieldElement pn) where
     )  where
         ft = getFieldTable (nat @pn)
 
-class (Num g, Fractional g) => Field g where
-  order :: Int
+class (Num g, Fractional g, Show g, Eq g) => Field g where
+  orderField :: Int
   fieldTable :: FieldTable
 
 instance (KnownNat pn) => Field (FieldElement pn) where
-  order = nat @pn
+  orderField = nat @pn
   fieldTable = getFieldTable $ nat @pn
 
 fieldTableMap :: Map Int (() -> FieldTable)
@@ -133,7 +133,7 @@ getFieldTable :: Int -> FieldTable
 getFieldTable pn =
     (fieldTableMap Map.! pn) ()
 
-withField :: Int -> (forall g. (Num g, Fractional g, Show g, Eq g) => h) -> h
+withField :: Int -> (forall g. Field g  => h) -> h
 withField pn f =
   case someNatVal (fromIntegral pn) of
     SomeNat (_ :: Proxy m) -> f @(FieldElement m)
