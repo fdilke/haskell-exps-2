@@ -11,7 +11,7 @@ module Test.Algebra.FieldSpec where
 import Data.Either (isRight)
 import Graph
 import Test.Hspec
-import Algebra.Field (FieldTable(..), fieldTable, withField)
+import Algebra.Field (FieldTable(..), mkFieldTable, withField)
 import Algebra.ConwayTable (conwayTable)
 import Debug.Trace (trace)
 import Data.Map (Map)
@@ -23,7 +23,7 @@ spec :: Spec
 spec = do
   describe "Finite field algebra" $ do
     it "can construct field tables for GF(25)" $ do
-      let ft :: FieldTable = fieldTable 5 2 [2,4]
+      let ft :: FieldTable = mkFieldTable 5 2 [2,4]
       ft.addTable Map.! (7, 23) `shouldBe` 0
       ft.addTable Map.! (23, 23) `shouldBe` 16
       ft.negTable Map.! 23 `shouldBe` 7

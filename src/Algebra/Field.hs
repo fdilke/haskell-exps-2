@@ -1,5 +1,5 @@
 {-# LANGUAGE MultilineStrings #-}
-module Algebra.Field(FieldTable(..), fieldTable, withField)
+module Algebra.Field(FieldTable(..), mkFieldTable, withField)
 where
 import Data.Text(Text)
 import Data.Functor ((<&>))
@@ -26,8 +26,8 @@ data FieldTable = FieldTable {
   }
   deriving (Show, Eq)
 
-fieldTable :: Int -> Int -> [Int] -> FieldTable
-fieldTable prime power primitive =
+mkFieldTable :: Int -> Int -> [Int] -> FieldTable
+mkFieldTable prime power primitive =
     FieldTable {
         addTable = addTable,
         negTable = negTable,
@@ -116,9 +116,17 @@ instance (KnownNat pn) => Fractional (FieldElement pn) where
     )  where
         ft = getFieldTable (nat @pn)
 
+class (Num g, Fractional g) => Field g where
+  order :: Int
+  fieldTable :: FieldTable
+
+instance (KnownNat pn) => Field (FieldElement pn) where
+  order = nat @pn
+  fieldTable = getFieldTable $ nat @pn
+
 fieldTableMap :: Map Int (() -> FieldTable)
 fieldTableMap = Map.fromList $ conwayTable <&> \case
-    (p : n : primitive) -> (p ^ n, \_ -> fieldTable p n primitive)
+    (p : n : primitive) -> (p ^ n, \_ -> mkFieldTable p n primitive)
     _ -> throw $ AssertionFailed "malformed table"
 
 getFieldTable :: Int -> FieldTable
