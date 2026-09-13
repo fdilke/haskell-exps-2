@@ -119,10 +119,12 @@ instance (KnownNat pn) => Fractional (FieldElement pn) where
 class (Num g, Fractional g, Show g, Eq g) => Field g where
   orderField :: Int
   fieldTable :: FieldTable
+  fieldElements :: [g]
 
 instance (KnownNat pn) => Field (FieldElement pn) where
   orderField = nat @pn
   fieldTable = getFieldTable $ nat @pn
+  fieldElements = [0..(nat @pn - 1)] <&> (fromInteger . toInteger)
 
 fieldTableMap :: Map Int (() -> FieldTable)
 fieldTableMap = Map.fromList $ conwayTable <&> \case

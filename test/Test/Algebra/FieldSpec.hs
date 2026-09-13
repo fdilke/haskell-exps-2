@@ -54,7 +54,7 @@ spec = do
 checkField :: forall f. Field f => Int -> Expectation
 checkField pn = do
   orderField @f `shouldBe` pn
-  let elements :: [f] = [0..(pn-1)] <&> (fromInteger . toInteger)
+  let elements :: [f] = fieldElements @f
       zero = 0 :: f
       one = 1 :: f
       xx :: Int = 3
