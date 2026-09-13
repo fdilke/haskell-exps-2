@@ -110,11 +110,11 @@ instance (KnownNat pn) => Fractional (FieldElement pn) where
   fromRational (a :% b) = FieldElement (
     ft.mulTable Map.! (fromInteger a, ft.invTable Map.! fromInteger b)
     ) where
-        ft = getFieldTable (nat @pn)
+        ft = fieldTable @(FieldElement pn)
   recip (FieldElement a) = FieldElement(
     ft.invTable Map.! a  
     )  where
-        ft = getFieldTable (nat @pn)
+        ft = fieldTable @(FieldElement pn)
 
 class (Num g, Fractional g, Show g, Eq g) => Field g where
   orderField :: Int
@@ -123,17 +123,15 @@ class (Num g, Fractional g, Show g, Eq g) => Field g where
 
 instance (KnownNat pn) => Field (FieldElement pn) where
   orderField = nat @pn
-  fieldTable = getFieldTable $ nat @pn
+  -- fieldTable = getFieldTable $ nat @pn
+  fieldTable = (fieldTableMap Map.! (nat @pn)) () 
+
   fieldElements = [0..(nat @pn - 1)] <&> (fromInteger . toInteger)
 
 fieldTableMap :: Map Int (() -> FieldTable)
 fieldTableMap = Map.fromList $ conwayTable <&> \case
     (p : n : primitive) -> (p ^ n, \_ -> mkFieldTable p n primitive)
     _ -> throw $ AssertionFailed "malformed table"
-
-getFieldTable :: Int -> FieldTable
-getFieldTable pn =
-    (fieldTableMap Map.! pn) ()
 
 withField :: Int -> (forall g. Field g  => h) -> h
 withField pn f =
