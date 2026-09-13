@@ -19,7 +19,7 @@ import Control.Exception (throw, AssertionFailed (AssertionFailed))
 import GHC.Real (Ratio(..))
 import Data.MemoTrie (memo)
 
-data FieldTable = FieldTable { 
+data FieldTable = FieldTable {
     addTable :: Map (Int, Int) Int,
     mulTable :: Map (Int, Int) Int,
     negTable :: Map Int Int,
@@ -48,7 +48,7 @@ mkFieldTable prime power primitive =
         invTable = tabulate domain $ polyToInt . invPoly . intToPoly
         negTable = tabulate domain $ polyToInt . negPoly . intToPoly
         intToPoly :: Int -> [Int]
-        intToPoly k = 
+        intToPoly k =
             intToPolySub k power
             where
                 intToPolySub l n =
@@ -88,32 +88,43 @@ newtype FieldElement (pn :: Nat) = FieldElement Int deriving (Show, Eq, Ord)
 
 instance (KnownNat pn) => Num (FieldElement pn) where
     (FieldElement a) + (FieldElement b) = FieldElement (
-        ft.addTable Map.! (a, b) 
+        ft.addTable Map.! (a, b)
         ) where
             ft = fieldTable @(FieldElement pn)
     (FieldElement a) - (FieldElement b) = FieldElement (
-        ft.mulTable Map.! (a, b) 
+        ft.addTable Map.! (a, ft.negTable Map.! b)
         ) where
             ft = fieldTable @(FieldElement pn)
     negate (FieldElement a) = FieldElement (
-        ft.invTable Map.! a
+        ft.negTable Map.! a
         ) where
             ft = fieldTable @(FieldElement pn)
     (FieldElement a) * (FieldElement b) = FieldElement (
-        ft.mulTable Map.! (a, b) 
+        ft.mulTable Map.! (a, b)
         ) where
             ft = fieldTable @(FieldElement pn)
     abs x = x
     signum (FieldElement n) = FieldElement (signum n)
     fromInteger i = FieldElement $ fromInteger i
 
+instance Enum (FieldElement pn) where
+  toEnum = FieldElement
+  fromEnum (FieldElement a) = a
+
+instance (KnownNat pn) => Real (FieldElement pn) where
+  toRational (FieldElement a) = toRational a
+
+instance (KnownNat pn) => Integral (FieldElement pn) where
+  quotRem p q = (p / q, 0)
+  toInteger (FieldElement a) = toInteger a
+
 instance (KnownNat pn) => Fractional (FieldElement pn) where
   fromRational (a :% b) = FieldElement (
     ft.mulTable Map.! (fromInteger a, ft.invTable Map.! fromInteger b)
     ) where
         ft = fieldTable @(FieldElement pn)
-  recip (FieldElement a) = FieldElement(
-    ft.invTable Map.! a  
+  recip (FieldElement a) = FieldElement (
+    ft.invTable Map.! a
     )  where
         ft = fieldTable @(FieldElement pn)
 
@@ -121,14 +132,27 @@ class (Num g, Fractional g, Show g, Eq g) => Field g where
   orderField :: Int
   fieldTable :: FieldTable
   fieldElements :: [g]
+  fieldMul :: Int -> Int -> Int
+  fieldAdd :: Int -> Int -> Int
+  fieldNeg :: Int -> Int
+  fieldInv :: Int -> Int
 
 instance (KnownNat pn) => Field (FieldElement pn) where
   orderField = nat @pn
   -- fieldTable = getFieldTable $ nat @pn
   fieldTable :: KnownNat pn => FieldTable
-  fieldTable = (fieldTableMap Map.! (nat @pn)) () 
+  fieldTable = (fieldTableMap Map.! (nat @pn)) ()
 
   fieldElements = [0..(nat @pn - 1)] <&> (fromInteger . toInteger)
+
+  fieldAdd a b = ft.addTable Map.! (a, b) where
+    ft = fieldTable @(FieldElement pn)
+  fieldMul a b = ft.mulTable Map.! (a, b) where
+    ft = fieldTable @(FieldElement pn)  
+  fieldNeg a = ft.negTable Map.! a where
+    ft = fieldTable @(FieldElement pn)    
+  fieldInv a = ft.invTable Map.! a where
+    ft = fieldTable @(FieldElement pn)    
 
 fieldTableMap :: Map Int (() -> FieldTable)
 fieldTableMap = Map.fromList $ conwayTable <&> \case

@@ -5,6 +5,8 @@
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeAbstractions #-}
+{- HLINT ignore "Redundant negate" -}
+{- HLINT ignore "Use -" -}
 
 module Test.Algebra.FieldSpec where
 
@@ -33,20 +35,22 @@ spec = do
       ft.mulTable Map.! (10, 15) `shouldBe` 8
       ft.mulTable Map.! (6, 6) `shouldBe` 19
       ft.invTable Map.! 7 `shouldBe` 16
-    it "are field tables sensible? (0)" $ do
-      let h = take 3 conwayTable
-          k = trace ("the tables:" <> show h) 0
-      k `shouldBe` (0 :: Int)
-    -- it "are field tables2 sensible?" $ do
-    --   let h = take 3 (Map.toList conwayTable2) <&> \(_, f) -> f ()
-    --       k = trace ("the tables:" <> show h) 0
-    --   k `shouldBe` (0 :: Int)
-    -- it "are field tables2 sensible?" $ do
-    --   let (p, h) = head (Map.toList conwayTable2)
-    --       k = trace ("the tables:" <> show (h ())) 0
-    --   -- let h = (take 3 (Map.toList conwayTable2)) <&> \(_, f) -> f ()
-    --   --     k = trace ("the tables:" <> show h) 0
-    --   k `shouldBe` (0 :: Int)
+    it "can use GF(25) in withField" $ do
+      withField 25 \ @f -> do
+        let (+++) = fieldAdd @f
+        let (***) = fieldMul @f
+        let negg = fieldNeg @f
+        let inv = fieldInv @f
+        7 +++ 23 `shouldBe` 0
+        23 +++ 23 `shouldBe` 16
+        negg 23 `shouldBe` 7
+        2 *** 3 `shouldBe` 1
+        2 *** 5 `shouldBe` 10
+        5 *** 5 `shouldBe` 8
+        10 *** 15 `shouldBe` 8
+        6 *** 6 `shouldBe` 19
+        inv 7 `shouldBe` 16
+        
     it "can do field calculations in scope" $ do
       withField 8 \ @f -> do
         checkField @f 8
@@ -61,15 +65,24 @@ checkField pn = do
       yy :: f = fromInteger (toInteger xx )
   for_ elements $ \a -> do
     a + zero `shouldBe` a
-    zero + a `shouldBe` a
+    a + negate a `shouldBe` zero
+    a - a `shouldBe` zero
+    negate (negate a) `shouldBe` a
     a * one `shouldBe` a
-    one * a `shouldBe` a
+    if a /= zero then do
+      a * recip a `shouldBe` one
+      recip (recip a) `shouldBe` a
+    else do
+      pure ()
     for_ elements $ \b -> do
+      a + b `shouldBe` b + a
+      a * b `shouldBe` b * a
       for_ elements $ \c -> do
         a + (b + c) `shouldBe` (a + b) + c
+        a * (b * c) `shouldBe` (a * b) * c
+        a * (b + c) `shouldBe` (a * b) + (a * c)
     -- TODO check more laws
 
 
 
 
-  
