@@ -24,13 +24,13 @@
               compiler-nix-name = "ghc9124";
               shell.tools.cabal = "latest";
               shell.withHoogle = false;
-              # shell.tools.haskell-language-server = "latest";
-              shell.tools.haskell-language-server = {
-                 src = builtins.fetchGit {
-                 url = "https://github.com/haskell/haskell-language-server.git";
-                 rev = "1b4b3c6bdd2bf8d1e1182e2e770f5dea9198db80";
-                };
-              };
+              shell.tools.haskell-language-server = "latest";
+              # shell.tools.haskell-language-server = {
+              #    src = builtins.fetchGit {
+              #    url = "https://github.com/haskell/haskell-language-server.git";
+              #    rev = "1b4b3c6bdd2bf8d1e1182e2e770f5dea9198db80";
+              #   };
+              # };
             };
           })
         ];

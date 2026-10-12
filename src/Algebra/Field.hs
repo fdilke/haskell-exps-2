@@ -8,13 +8,22 @@ import Data.Text qualified as T
 import Data.Char (isDigit)
 import Data.Function (on)
 import Data.List (groupBy, unsnoc)
-import GHC.TypeNats (KnownNat, Nat, SomeNat (..), natVal, someNatVal)
 import Utility.Utility
 import Data.Map (Map)
 import Data.Map qualified as Map
 import Algebra.ConwayTable
 import Data.Singletons.Base.TH
-import GHC.TypeNats (KnownNat, Nat, SomeNat (..), someNatVal)
+import GHC.TypeNats
+      ( KnownNat,
+        Nat,
+        SomeNat(..),
+        natVal,
+        someNatVal,
+        KnownNat,
+        Nat,
+        SomeNat(..),
+        someNatVal )
+
 import Control.Exception (throw, AssertionFailed (AssertionFailed))
 import GHC.Real (Ratio(..))
 import Data.MemoTrie (memo)
